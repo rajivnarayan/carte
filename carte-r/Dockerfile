@@ -42,6 +42,9 @@ LABEL org.label-schema.name="carte-r" \
       org.label-schema.vcs-url="https://github.com/rajivnarayan/carte/carte-r" \
       org.label-schema.schema-version="1.0"
 
+# copy config files
+COPY root /
+
 ## Install system dependencies
 RUN apt-get update \
   && BUILD_DEPS="\
@@ -217,9 +220,6 @@ RUN apt-get update \
   && apt-get autoremove -y \
   && apt-get autoclean -y \
   && rm -rf /var/lib/apt/lists/*
-
-# copy config files
-COPY root /
 
 USER $CARTE_USER
 
