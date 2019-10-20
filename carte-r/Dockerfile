@@ -8,16 +8,31 @@
 FROM rocker/r-apt:bionic
 
 ARG BUILD_DATE
-ARG BUILD_VERSION="test"
-ARG R_VERSION
-# Path to User installed libraries
-ARG R_SITE_LIBRARY_PATH="/usr/local/lib/R/site-library"
-
-# Kallisto version to install
-ARG KALLISTO_VERSION="v0.46.0"
+ARG BUILD_VERSION="latest"
+# non-root user 
+# Change using --build-arg CARTE_USER='myname" 
+ARG CARTE_USER='carte'
+# Change using --build-arg CARTE_PASSWORD="mypassword"
+ARG CARTE_PASSWORD='carte:)'
 
 # Mountpint for externally mounted volume
 ARG VOLUME_PATH="/work"
+
+# R config options
+ARG R_VERSION="3.6"
+# Path to User installed libraries
+ARG R_SITE_LIBRARY_PATH="/usr/local/lib/R/site-library"
+
+# S6 process supervisor options
+ARG S6_VERSION
+ENV S6_VERSION=${S6_VERSION:-v1.21.7.0}
+ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
+
+# Kallisto options
+ARG KALLISTO_VERSION="v0.46.0"
+
+# TinyTex installation path
+ARG TINYTEX_DIR='/opt/tinytex'
 
 LABEL org.label-schema.name="carte-r" \
 	  org.label-schema.description="CARTE-R is a container image that provides runtime environment for analysis workflows using R" \
@@ -30,15 +45,25 @@ LABEL org.label-schema.name="carte-r" \
 ## Install system dependencies
 RUN apt-get update \
   && BUILD_DEPS="\
-  # system tools
+ ## system tools
   autoconf \
   bash-completion \
   cmake \
+  curl \
   file \
   git \
+  # JSON utility
   jq \
+  # text-based file manager
   mc \
-  ## system libraries
+  # text-editor
+  vim \
+  sudo \
+  # for installing local packages r-studio and shiny
+  gdebi-core \
+  openssh-client \
+  rsync \
+ ## system library dependencies
   libcairo2-dev \
   libcurl4-openssl-dev \
   libhdf5-100 \
@@ -54,6 +79,37 @@ RUN apt-get update \
   libxml2-dev \
   unixodbc-dev \
   zlib1g-dev \
+ ## Matlab MCR dependencies
+  libncurses5 \
+  libxext6 \
+  libxmu6 \
+  libxt6 \
+  ## Nice Google fonts
+  fonts-roboto \
+  ## used by some base R plots
+  ghostscript \
+  ## used to build rJava and other packages
+  libbz2-dev \
+  libicu-dev \
+  liblzma-dev \
+  ## system dependency of hunspell (devtools)
+  libhunspell-dev \
+  ## system dependency of hadley/pkgdown
+  libmagick++-dev \
+  ## rdf, for redland / linked data
+  #librdf0-dev \
+  #libraptor2-dev \
+  #librasqal3-dev \
+  #libcurl4-gnutls-dev \
+  ## for V8-based javascript wrappers
+  libv8-dev \
+  ## R CMD Check wants qpdf to check pdf sizes, or throws a Warning
+  qpdf \
+  ## For building PDF manuals
+  texinfo \
+  ## parallelization
+  libzmq3-dev \
+  libopenmpi-dev \
   # Binary R packages
   r-cran-arules \
   r-cran-base64enc \
@@ -107,14 +163,34 @@ RUN apt-get update \
   r-cran-testthat \
   r-cran-yaml" \
   && apt-get install -y --no-install-recommends $BUILD_DEPS \
-## Install R packages with missing binaries from source
-  && R -e "SRC_PACKAGE <- c('gastonstat/arcdiagram', \
-  'circlize', \
-  'prada', \
-  'Glimma', \
-  'sva', \
-  'cmap/cmapR'); \
-  BiocManager::install(SRC_PACKAGE, update=F)" \
+## Install missing R packages from CRAN and Bioconductor
+  && install2.r --skipinstalled \
+   --repos "http://bioconductor.org/packages/${R_VERSION}/bioc" \
+   --repos "https://cloud.r-project.org" \
+   'circlize' \
+   'prada' \
+   'Glimma' \
+   'sva' \
+## Install packages from Github
+  && installGithub.r --update FALSE \
+   'gastonstat/arcdiagram' \
+   'cmap/cmapR' \
+   'pachterlab/sleuth' \
+## Use tinytex for LaTeX installation
+  && install2.r --error tinytex \
+  ## Admin-based install of TinyTeX:
+  && wget -qO- \
+    "https://github.com/yihui/tinytex/raw/master/tools/install-unx.sh" | \
+    TINYTEX_DIR=${TINYTEX_DIR} sh -s - --admin --no-path \
+  && ${TINYTEX_DIR}/bin/*/tlmgr path add \
+  && tlmgr install ae inconsolata listings metafont mfware parskip pdfcrop tex \
+  && tlmgr path add \
+  && Rscript -e "tinytex::r_texmf()" \
+  && chown -R root:staff ${TINYTEX_DIR} \
+  && chown -R root:staff /usr/local/lib/R/site-library \
+  && chmod -R g+w ${TINYTEX_DIR} \
+  && chmod -R g+wx "${TINYTEX_DIR}/bin" \
+  && echo "PATH=${PATH}" >> /usr/lib/R/etc/Renviron \
 ## Install kallisto
   && cd /tmp \
   && git clone https://github.com/pachterlab/kallisto.git \
@@ -124,19 +200,34 @@ RUN apt-get update \
   && cmake .. \
   && make \
   && make install \
-## Install z directory navigation utility
-  && wget https://raw.githubusercontent.com/rupa/z/master/z.sh \
-          -o /etc/profile.d/z.sh \
+## Setup non-root user and groups
+&& useradd --create-home --shell /bin/bash $CARTE_USER \
+&& echo "$CARTE_USER:$CARTE_PASSWORD" | chpasswd \
+&& adduser $CARTE_USER staff \
+## Set up S6 init system
+  && wget --no-verbose -S -P /tmp/ https://github.com/just-containers/s6-overlay/releases/download/${S6_VERSION}/s6-overlay-amd64.tar.gz \
+  && tar xzf /tmp/s6-overlay-amd64.tar.gz -C / \
+## Install z.sh directory navigation utility
+  && wget --no-verbose -S https://raw.githubusercontent.com/rupa/z/master/z.sh \
+          -O /etc/profile.d/z.sh \
 ## Clean up source install
   && cd / \
+  && chmod +x /entrypoint.sh \
   && rm -rf /tmp/* \
   && apt-get autoremove -y \
   && apt-get autoclean -y \
   && rm -rf /var/lib/apt/lists/*
 
+# copy config files
+COPY root /
+
+USER $CARTE_USER
+
 VOLUME ["$VOLUME_PATH"]
 
+ENTRYPOINT ["/entrypoint.sh"]
+
+CMD ["R"]
 # TODO
 # Packages to Add
-# 'pachterlab/sleuth' # note has many dependencies
 # Mini latex distributiion tinytex
