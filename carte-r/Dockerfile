@@ -62,6 +62,7 @@ RUN apt-get update \
   # text-editor
   vim \
   sudo \
+  gosu \
   # for installing local packages r-studio and shiny
   gdebi-core \
   openssh-client \
