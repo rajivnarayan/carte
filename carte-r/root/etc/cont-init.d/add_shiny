@@ -6,8 +6,8 @@ ADD_SHINY=${ADD_SHINY:=none}
 
 if [[ "$ADD_SHINY" == "true" ]]; then
 	echo "Adding shiny server to container..."	
-	apt-get update && apt-get -y install
-	gdebi-core libxt-dev
+	apt-get update
+	apt-get -y install gdebi-core libxt-dev
 	wget --no-verbose https://s3.amazonaws.com/rstudio-shiny-server-os-build/ubuntu-12.04/x86_64/VERSION -O "version.txt"
 	VERSION=$(cat version.txt) 
 	wget --no-verbose "https://s3.amazonaws.com/rstudio-shiny-server-os-build/ubuntu-12.04/x86_64/shiny-server-$VERSION-amd64.deb" -O ss-latest.deb 

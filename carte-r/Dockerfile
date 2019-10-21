@@ -222,11 +222,11 @@ RUN apt-get update \
   && apt-get autoclean -y \
   && rm -rf /var/lib/apt/lists/*
 
-USER $CARTE_USER
+#USER $CARTE_USER
 
 VOLUME ["$VOLUME_PATH"]
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["/init"]
 
 CMD ["R"]
 # TODO
