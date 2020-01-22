@@ -163,7 +163,7 @@ RUN apt-get update \
   r-cran-rprojroot \
   r-cran-rrcov \
   r-cran-rtsne \
-  r-base-s4vectors \
+  r-bioc-s4vectors \
   r-cran-selectr \
   r-cran-tidyverse \
   r-cran-testthat \
