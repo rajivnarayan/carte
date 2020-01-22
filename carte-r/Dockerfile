@@ -135,6 +135,7 @@ RUN apt-get update \
   r-cran-foreach \
   r-cran-formatr \
   r-cran-futile.logger \
+  r-bioc-genefilter \
   r-cran-ggally \
   r-cran-ggplot2 \
   r-cran-ggpubr \
@@ -162,6 +163,7 @@ RUN apt-get update \
   r-cran-rprojroot \
   r-cran-rrcov \
   r-cran-rtsne \
+  r-base-s4vectors \
   r-cran-selectr \
   r-cran-tidyverse \
   r-cran-testthat \
