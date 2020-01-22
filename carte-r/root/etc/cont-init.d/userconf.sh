@@ -52,7 +52,7 @@ if [ "$GROUPID" -ne 1000 ]
 fi
 
 ## Add a password to user
-echo "$USER:$PASSWORD" | chpasswd
+echo "$USER:$PASSWORD" | sudo chpasswd
 
 # Use Env flag to know if user should be added to sudoers
 if [[ ${ROOT,,} == "true" ]]
