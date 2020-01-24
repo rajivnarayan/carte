@@ -163,6 +163,7 @@ RUN apt-get update \
   r-cran-rprojroot \
   r-cran-rrcov \
   r-cran-rtsne \
+  r-bioc-s4vectors=0.20.1-1cran1ppabionic0 \
   r-cran-selectr \
   r-cran-tidyverse \
   r-cran-testthat \
@@ -176,7 +177,6 @@ RUN apt-get update \
    'prada' \
    'Glimma' \
    'sva' \
-   'S4Vectors' \
 ## Install packages from Github
   && installGithub.r --update FALSE \
    'gastonstat/arcdiagram' \
