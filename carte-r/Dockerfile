@@ -1,5 +1,6 @@
-# CARTE-R Container based Analysis RunTime Environment for R
-
+# CARTE-R A Container based Analysis RunTime Environment for R
+#
+# 
 # Based on Rocker r-apt image
 # https://github.com/rocker-org/rocker-versioned
 #
@@ -35,7 +36,7 @@ ARG KALLISTO_VERSION="v0.46.0"
 ARG TINYTEX_DIR='/opt/tinytex'
 
 LABEL org.label-schema.name="carte-r" \
-	  org.label-schema.description="CARTE-R is a container image that provides runtime environment for analysis workflows using R" \
+	  org.label-schema.description="CARTE-R is a container image that provides runtime environment for data analysis using the R programming language" \
 	  org.label-schema.version="$BUILD_VERSION" \
 	  org.label-schema.build-date="$BUILD_DATE" \
 	  org.label-schema.license="GPL-2.0" \

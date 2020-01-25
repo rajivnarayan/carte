@@ -1,32 +1,47 @@
 #!/usr/bin/with-contenv bash
 
+# Install Rstudio if true
+# Specify with -e ADD_RSTUDIO=true
 ADD_RSTUDIO=${ADD_RSTUDIO:=none}
 
-RSTUDIO_VERSION=${RSTUDIO_VERSION:-1.1.447}
-export PATH=/usr/lib/rstudio-server/bin:$PATH
+# Rstudio Version specify with -e RSTUDIO_VERSION=<ver>
+# Defaults to latest 
+RSTUDIO_VERSION=${RSTUDIO_VERSION:=latest}
 
-if [[ $ADD_RSTUDIO == 'true' ]]; then
+if [[ $RSTUDIO_VERSION == 'latest' ]]; then
+	RSTUDIO_URL='https://www.rstudio.org/download/latest/stable/server/bionic/rstudio-server-latest-amd64.deb'
+else
+	RSTUDIO_URL="http://download2.rstudio.org/server/bionic/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb"
+fi
+# Verify if the URL exists
+wget -q --method=HEAD "$RSTUDIO_URL"
+URL_EXISTS=$?
+
+if [[ $ADD_RSTUDIO == 'true' && $URL_EXISTS -eq 0 ]]; then
 	echo "Installing RStudio server to the container..."
-	## Attempts to get detect latest version, otherwise falls back to version given in $VER
-	## Symlink pandoc, pandoc-citeproc so they are available system-wide
+	
+	export PATH=/usr/lib/rstudio-server/bin:$PATH
+	
+	## Download and install Rstudio
 	apt-get update
 	apt-get install -y --no-install-recommends gdebi-core git
-	RSTUDIO_LATEST=$(wget --no-check-certificate -qO- https://s3.amazonaws.com/rstudio-server/current.ver) 
-	[ -z "$RSTUDIO_VERSION" ] && RSTUDIO_VERSION=$RSTUDIO_LATEST || true 
-	wget -q http://download2.rstudio.org/rstudio-server-${RSTUDIO_VERSION}-amd64.deb 
-	gdebi -n rstudio-server-${RSTUDIO_VERSION}-amd64.deb
-	rm rstudio-server-*-amd64.deb
+	wget -O rstudio-server.deb "$RSTUDIO_URL"
+	gdebi -n rstudio-server.deb
+	rm rstudio-server.deb
+	
 	## Symlink pandoc & standard pandoc templates for use system-wide
-	ln -s /usr/lib/rstudio-server/bin/pandoc/pandoc /usr/local/bin
-	ln -s /usr/lib/rstudio-server/bin/pandoc/pandoc-citeproc /usr/local/bin
+	ln -sf /usr/lib/rstudio-server/bin/pandoc/pandoc /usr/local/bin
+	ln -sf /usr/lib/rstudio-server/bin/pandoc/pandoc-citeproc /usr/local/bin
 	git clone https://github.com/jgm/pandoc-templates
 	mkdir -p /opt/pandoc/templates
 	cp -r pandoc-templates*/* /opt/pandoc/templates && rm -rf pandoc-templates*
-	mkdir /root/.pandoc && ln -s /opt/pandoc/templates /root/.pandoc/templates
+	mkdir -p /root/.pandoc && ln -sf /opt/pandoc/templates /root/.pandoc/templates
 	apt-get clean
 	rm -rf /var/lib/apt/lists/ 
+	
 	## RStudio wants an /etc/R, will populate from $R_HOME/etc
 	mkdir -p /etc/R
+	
 	## Write config files in $R_HOME/etc
 	echo -e '\n
 	\n# Configure httr to perform out-of-band authentication if HTTR_LOCALHOST
@@ -44,10 +59,14 @@ if [[ $ADD_RSTUDIO == 'true' ]]; then
 	git config --system credential.helper 'cache --timeout=3600'
 	git config --system push.default simple
   else
-	echo -e "Not installing RStudio.\n
-		  To install at run time specify -e ADD_RSTUDIO=true to the 
-		  Docker run command.\n
-		  To install within a container run:\n
-		  export ADD_RSTUDIO=true && bash /etc/cont-init.d/add_rstudio
-		  " 
+	if [[ $URL_EXISTS -ne 0 ]]; then
+		echo -e "$RSTUDIO_URL does not exist!\n
+Ensure that the specified version exists\n
+Not installing Rstudio"
+	elif [[ $ADD_RSTUDIO != 'true' ]]; then
+  	echo "Not installing RStudio since ADD_RSTUDIO not specified
+To install at run time specify -e ADD_RSTUDIO=true to the Docker run command.
+To install within a container run:
+export ADD_RSTUDIO=true && bash /etc/cont-init.d/add_rstudio" 
+	  fi
   fi
