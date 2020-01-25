@@ -5,7 +5,7 @@ USER=${USER:=carte}
 PASSWORD=${PASSWORD:=carte:)}
 USERID=${USERID:=1000}
 GROUPID=${GROUPID:=1000}
-ROOT=${ROOT:=FALSE}
+SUDO=${SUDO:=FALSE}
 UMASK=${UMASK:=022}
 
 bold=$(tput bold)
@@ -55,7 +55,7 @@ fi
 echo "$USER:$PASSWORD" | sudo chpasswd
 
 # Use Env flag to know if user should be added to sudoers
-if [[ ${ROOT,,} == "true" ]]
+if [[ ${SUDO,,} == "true" ]]
   then
     adduser $USER sudo && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
     echo "$USER added to sudoers"

@@ -207,6 +207,8 @@ RUN apt-get update \
   && make \
   && make install \
 ## Setup non-root user and groups
+## First remove the docker user created by r-apt
+&& userdel -r docker \
 && useradd --create-home --shell /bin/bash $CARTE_USER \
 && echo "$CARTE_USER:$CARTE_PASSWORD" | chpasswd \
 && adduser $CARTE_USER staff \
@@ -231,6 +233,3 @@ VOLUME ["$VOLUME_PATH"]
 ENTRYPOINT ["/init"]
 
 CMD ["R"]
-# TODO
-# Packages to Add
-# Mini latex distributiion tinytex
