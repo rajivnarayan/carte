@@ -124,6 +124,7 @@ RUN apt-get update \
   r-cran-bitops \
   r-cran-caret \
   r-cran-catools \
+  r-cran-circlize \
   r-cran-curl \
   r-cran-data.table \
   r-cran-dendextend \
@@ -148,7 +149,10 @@ RUN apt-get update \
   r-cran-highr \
   r-cran-htmltools \
   r-cran-httr \
+  r-cran-huxtable \
+  r-cran-ineq \
   r-cran-igraph \
+  r-cran-jsonlite \
   r-cran-knitr \
   r-bioc-limma \
   r-cran-markdown \
@@ -156,6 +160,8 @@ RUN apt-get update \
   r-cran-pcapp \
   r-cran-pheatmap \
   r-cran-psych \
+  r-bioc-qvalue \
+  r-cran-ranger \
   r-cran-rcolorbrewer \
   r-bioc-rhdf5lib \
   r-bioc-rhdf5 \
@@ -166,15 +172,19 @@ RUN apt-get update \
   r-cran-rtsne \
   r-bioc-summarizedexperiment \
   r-cran-selectr \
+  r-cran-seqinr \
   r-cran-tidyverse \
   r-cran-testthat \
+  r-cran-xgboost \
+  r-cran-xml2 \
   r-cran-yaml" \
   && apt-get install -y --no-install-recommends $BUILD_DEPS \
 ## Install missing R packages from CRAN and Bioconductor
   && install2.r --skipinstalled \
    --repos "http://bioconductor.org/packages/${R_VERSION}/bioc" \
    --repos "https://cloud.r-project.org" \
-   'circlize' \
+   'GetoptLong' \
+   'ComplexHeatmap' \
    'prada' \
    'Glimma' \
    'sva' \
@@ -213,7 +223,7 @@ RUN apt-get update \
 && useradd --create-home --shell /bin/bash $CARTE_USER \
 && echo "$CARTE_USER:$CARTE_PASSWORD" | chpasswd \
 && adduser $CARTE_USER staff \
-## Set up S6 init system
+## Set up S6-overlay init system
   && wget --no-verbose -S -P /tmp/ https://github.com/just-containers/s6-overlay/releases/download/${S6_VERSION}/s6-overlay-amd64.tar.gz \
   && tar xzf /tmp/s6-overlay-amd64.tar.gz -C / \
 ## Install z.sh directory navigation utility
@@ -231,6 +241,7 @@ RUN apt-get update \
 
 VOLUME ["$VOLUME_PATH"]
 
+# s6-overlay
 ENTRYPOINT ["/init"]
 
-CMD ["R"]
+CMD ["su ${CARTE_USER}"]
