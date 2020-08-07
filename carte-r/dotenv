@@ -1,0 +1,33 @@
+# Template for docker-compose variables
+# To use copy this file to .env
+# Edit the variables below as needed
+
+# REQUIRED Variables
+# =================
+
+# A user password must be specified at runtime
+
+CARTE_PASSWORD=changeme:)
+
+# Specify fullpath to volume to bind-mount to container
+
+BIND_VOLUME=/home/user
+
+# UID of the container user must match the hosts UID 
+# to set file permissions correctly
+
+HOST_UID=1000
+
+# Optional variables
+# ===================
+
+# Port mappings
+# Specify host ports (aka published ports) that will be 
+# mapped to corresponding services in the container
+# Ensure that the host ports are available, otherwise the service may 
+# not be accessible from the host
+
+RSTUDIO_PORT=8787
+SHINY_PORT=3838
+OPENCPU_HTTP_PORT=8080
+OPENCPU_HTTPS_PORT=8443
