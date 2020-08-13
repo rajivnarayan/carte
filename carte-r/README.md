@@ -1,10 +1,15 @@
 # carte-r 
 
-### <u>C</u>ontainer based <u>A</u>nalysis <u>R</u>un <u>T</u>ime <u>E</u>nvironment for <u>R</u>
+## <u>C</u>ontainerized <u>A</u>nalysis <u>R</u>un <u>T</u>ime <u>E</u>nvironment for <u>R</u>
 
+## Overview 
 carte-r provides a customizable Docker container for data analysis using the R programming language.
 
-#### Motivation
+- Docker image: [https://quay.io/repository/rajivnarayan/carte-r](https://quay.io/repository/rajivnarayan/carte-r)
+- Presentations
+ - [Talk at Boston Computational Biology and Bioinformatics Meetup](https://docs.google.com/presentation/d/12IYun6xaBOPVdTIMsmFnTdH7LfP26pOV0ZBdzP4MEsY/edit?usp=sharing)
+
+## Aims
 
 This project grew out of a need to run various scientific-computing and data-science workflows in R across multiple hosts in a reproducible manner. In particular the requirements were:
 
@@ -13,7 +18,7 @@ This project grew out of a need to run various scientific-computing and data-sci
 * the ability to quickly expose custom algorithms via APIs for enabling web applications
 
 
-#### Features
+## Features
 
 carte-r is a single Docker image that provides command-line access to a customized R environment with the ability to enable additional software components (like rstudio, opencpu and shiny) at runtime.
 
@@ -32,9 +37,9 @@ The image integrates several software components developed by others:
 
 * The [s6-overlay](https://github.com/just-containers/s6-overlay) init system to manage multiple processes in a single container
 
-#### Usage
+## Getting Started
 
-##### Using the docker command
+### Using the docker command
 
 * Start a container with just R + packages and mount the host $HOME folder at /work within the container
 
@@ -44,7 +49,7 @@ The image integrates several software components developed by others:
 
 `docker run -p 8787:8787 -p 3838:3838 -p 8080:80 -v $HOME:/work -it -e 'PASSWORD=letmein:)' -e ADD_RSTUDIO=true -e SUDO=true -e USERID=$UID --rm quay.io/rajivnarayan/carte-r:latest /bin/bash`
 
-##### Using docker-compose
+### Using docker-compose
 
 * Initial setup
 	* Clone this repo and change 
@@ -69,7 +74,7 @@ Access Rstudio by visting http://localhost:8787 in a web browser (change the por
 
 Access OpenCpu http://localhost:8080/ocpu or the value of $OPENCPU_HTTP_PORT in the .env file
 
-##### Building an image using the Docker file
+### Building a new image using the Docker file
 
 `docker build --no-cache=true --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') --build-arg BUILD_VERSION="test" -t carte-r:latest`
 
@@ -83,7 +88,7 @@ Access OpenCpu http://localhost:8080/ocpu or the value of $OPENCPU_HTTP_PORT in 
 - `ADD_OPENCPU`: Install OpenCPU if true. Default is false
 - `ADD_SHINY`: Install Shiny serever if true. Default is false
 
-#### Container ports
+### Container ports
 Services if enabled run on the following ports within the container:
 
 - `RSTUDIO_PORT=8787`
