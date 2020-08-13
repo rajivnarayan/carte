@@ -7,11 +7,7 @@ carte-r provides a customizable Docker container for data analysis using the R p
 
 - Docker image: [https://quay.io/repository/rajivnarayan/carte-r](https://quay.io/repository/rajivnarayan/carte-r)
 - Presentations
-<<<<<<< HEAD
- - [Talk at Boston Computational Biology and Bioinformatics Meetup](https://docs.google.com/presentation/d/12IYun6xaBOPVdTIMsmFnTdH7LfP26pOV0ZBdzP4MEsY/edit?usp=sharing)
-=======
- - [Talk at Boston Computational Biology and Bioinformatics Meetup] (https://docs.google.com/presentation/d/12IYun6xaBOPVdTIMsmFnTdH7LfP26pOV0ZBdzP4MEsY/edit?usp=sharing)
->>>>>>> 0f9683bb5f4908194aa34cfc61dbdbf154876a8d
+- [Talk at Boston Computational Biology and Bioinformatics Meetup](https://docs.google.com/presentation/d/12IYun6xaBOPVdTIMsmFnTdH7LfP26pOV0ZBdzP4MEsY/edit?usp=sharing)
 
 ## Aims
 
