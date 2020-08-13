@@ -24,10 +24,10 @@ HOST_UID=1000
 # Port mappings
 # Specify host ports (aka published ports) that will be 
 # mapped to corresponding services in the container
-# Ensure that the host ports are available, otherwise the service may 
-# not be accessible from the host
+# Ensure that the host ports are available, otherwise the service 
+# will not be accessible from the host
 
-RSTUDIO_PORT=8787
-SHINY_PORT=3838
-OPENCPU_HTTP_PORT=8080
-OPENCPU_HTTPS_PORT=8443
+RSTUDIO_HOST_PORT=8787
+SHINY_HOST_PORT=3838
+OPENCPU_HTTP_HOST_PORT=8080
+OPENCPU_HTTPS_HOST_PORT=8443

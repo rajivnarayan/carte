@@ -1,11 +1,12 @@
 version: "3.7"
 
-# Usage: docker-compose up <service name>
+# Various configurations of CARTE-R 
 # All variables are specified in the .env file
+# Copy the dotenv file to .env and edit as needed
 
 services:
-
-# Base container with command-line R interface
+# Base container with command-line interface
+# Usage: docker-compose run base
   base:
     image: "quay.io/rajivnarayan/carte-r:latest"
     env_file: .env
@@ -14,14 +15,67 @@ services:
         SUDO: "true"
         # user id of carte user
         USERID: ${HOST_UID}
-    entrypoint: "/init"
+    entrypoint: ['/init', 'su', 'carte']
+    
     volumes:
       # bind mount specified host folder
     - type: bind
       source: ${BIND_VOLUME:?err}
-      target: /work
-      #stdin_open: true
-      #tty: true
+      target: /home/carte
+
+# With R-studio server
+# Usage: docker-compose up rstudio
+# Access rstudio 
+  rstudio :
+    image: "quay.io/rajivnarayan/carte-r:latest"
+    # read variables from the .env file
+    env_file: .env
+    environment:
+        # rstudio login password
+        PASSWORD: ${CARTE_PASSWORD?:err}
+        # add carte user to sudo group
+        SUDO: "true"
+        # user id of carte user
+        USERID: ${HOST_UID}
+        # enable rstudio if true
+        ADD_RSTUDIO: "true"
+    
+    volumes:
+      # bind mount specified host folder
+      - type: bind
+        source: ${BIND_VOLUME:?err}
+        target: /home/carte
+    # Port mapping from the container to the host
+    ports:
+    # Rstudio: http://localhost:8787
+      - "${RSTUDIO_HOST_PORT}:8787"
+    entrypoint: "/init"
+
+# Enable OpenCPU
+  opencpu :
+    image: "quay.io/rajivnarayan/carte-r:latest"
+    # read variables from the .env file
+    env_file: .env
+    environment:
+        # rstudio login password
+        PASSWORD: ${CARTE_PASSWORD?:err}
+        # add carte user to sudo group
+        SUDO: "true"
+        # user id of carte user
+        USERID: ${HOST_UID}
+        # enable opencpu
+        ADD_OPENCPU: "true"
+    
+    volumes:
+      # bind mount specified host folder
+      - type: bind
+        source: ${BIND_VOLUME:?err}
+        target: /home/carte
+    # Port mapping from the container to the host
+    ports:
+    # openCPU: http://localhost:$OPENCPU_HTTP_HOST_PORT/ocpu
+      - "${OPENCPU_HTTP_HOST_PORT}:80"
+    entrypoint: "/init"
 
 # A full-fledged container with R, Rstudio, and Opencpu
 # The host folder specified by $BIND_VOLUME is 
@@ -42,7 +96,7 @@ services:
         # enable rstudio if true
         ADD_RSTUDIO: "true"
         # enable shiny if true
-        ADD_SHINY: "false"
+        ADD_SHINY: "true"
         # enable opencpu if true
         ADD_OPENCPU: "true"
     
@@ -50,20 +104,19 @@ services:
       # bind mount specified host folder
       - type: bind
         source: ${BIND_VOLUME:?err}
-        target: /work
+        target: /home/carte
    
     # Port mapping from the container to the host
     ports:
-    # Rstudio: http://localhost:$RSTUDIO_PORT
-      - "${RSTUDIO_PORT}:8787"
+    # Rstudio: http://localhost:$RSTUDIO_HOST_PORT
+      - "${RSTUDIO_HOST_PORT}:8787"
     # Shiny
-    #  - "${SHINY_PORT}:3838"
+      - "${SHINY_HOST_PORT}:3838"
     # OpenCPU HTTP 
-    # Opencpu endpoint: http://localhost:$OPENCPU_HTTP_PORT/ocpu
-    # Rstudio procy: http://localhost:$OPENCPU_HTTP_PORT/rstudio
-      - "${OPENCPU_HTTP_PORT}:80"
+    # Opencpu endpoint: http://localhost:$OPENCPU_HTTP_HOST_PORT/ocpu
+    # Rstudio proxy: http://localhost:$OPENCPU_HTTP_HOST_PORT/rstudio
+      - "${OPENCPU_HTTP_HOST_PORT}:80"
     # OpenCPU HTTPS for secure http (needs ssl certs to be configured)
-    #  - "${OPENCPU_HTTPS_PORT}:443"
+    #  - "${OPENCPU_HTTPS_HOST_PORT}:443"
     
     entrypoint: "/init"
-
