@@ -6,7 +6,7 @@
 
 # docker build --no-cache=true --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') --build-arg BUILD_VERSION="test" -t carte-mcr:latest .
 
-FROM bitnami/minideb:stretch
+FROM bitnami/minideb:latest
 
 ARG BUILD_DATE
 ARG BUILD_VERSION="test"
