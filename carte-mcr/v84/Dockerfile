@@ -53,7 +53,7 @@ RUN apt-get update \
 ## Download MCR
 && cd /tmp/mcr_installer \
 && echo "Downloading MCR from: $MCR_URL" \
-&& wget --no-verbose -S "$MCR_URL" -O mcr_installer.zip \
+&& wget --no-verbose --no-check-certificate -S "$MCR_URL" -O mcr_installer.zip \
 && unzip -q mcr_installer.zip \
 ## Install MCR
 && ./install -mode silent -agreeToLicense Yes -destinationFolder "$MCR_INSTALL_PATH" \
