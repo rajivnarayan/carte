@@ -37,8 +37,7 @@ LABEL org.label-schema.name="carte-mcr" \
       org.label-schema.vcs-url="https://github.com/rajivnarayan/carte/carte-mcr" \
       org.label-schema.schema-version="1.0"
 
-RUN apt-get update \
-&& apt-get install -y --no-install-recommends \
+RUN install_packages \
   wget \
   tar \
   unzip \
@@ -62,7 +61,10 @@ RUN apt-get update \
 && rm -rf /tmp/* \
 && apt-get autoremove -y \
 && apt-get autoclean -y \
-&& rm -rf /var/lib/apt/lists/*
+&& rm -rf /var/lib/apt/lists/* \
+## Remove extraneous MCR files
+&& rm -rf /opt/mcr/v84/sys/jxbrowser-chromium \
+&& find  /opt/mcr/ -name 'ja_JP' -type d -prune -exec rm -r {} \;
 
 # Configure library paths to MCR
 # Note that setting LD_LIBRARY_PATH breaks other apps so as a workaround
