@@ -65,7 +65,7 @@ services:
         USERID: ${HOST_UID}
         # enable opencpu
         ADD_OPENCPU: "true"
-    
+        OCPU_DISABLE_APPARMOR: "true"    
     volumes:
       # bind mount specified host folder
       - type: bind

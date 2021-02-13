@@ -129,8 +129,10 @@ RUN apt-get update \
   r-cran-data.table \
   r-cran-dendextend \
   r-cran-devtools \
+  r-bioc-deseq2 \
   r-cran-doparallel \
   r-cran-dplyr \
+  r-cran-dt \
   r-bioc-edger \
   r-cran-e1071 \
   r-cran-fastcluster \
@@ -159,6 +161,7 @@ RUN apt-get update \
   r-cran-mvtnorm \
   r-cran-pcapp \
   r-cran-pheatmap \
+  r-cran-plotly \
   r-cran-psych \
   r-bioc-qvalue \
   r-cran-ranger \
@@ -188,11 +191,15 @@ RUN apt-get update \
    'prada' \
    'Glimma' \
    'sva' \
+   'flexdashboard' \
+   'uwot' \
 ## Install packages from Github
   && installGithub.r --update FALSE \
    'gastonstat/arcdiagram' \
    'cmap/cmapR' \
    'pachterlab/sleuth' \
+   'rstudio/crosstalk' \
+   'jcheng5/d3scatter' \
 ## Use tinytex for LaTeX installation
   && install2.r --error tinytex \
   ## Admin-based install of TinyTeX:
