@@ -178,6 +178,7 @@ RUN apt-get update \
   r-cran-seqinr \
   r-cran-tidyverse \
   r-cran-testthat \
+  r-cran-usethis \
   r-cran-xgboost \
   r-cran-xml2 \
   r-cran-yaml" \
