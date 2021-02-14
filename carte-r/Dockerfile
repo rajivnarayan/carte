@@ -26,11 +26,11 @@ ARG R_SITE_LIBRARY_PATH="/usr/local/lib/R/site-library"
 
 # S6 process supervisor options
 ARG S6_VERSION
-ENV S6_VERSION=${S6_VERSION:-v1.21.7.0}
+ENV S6_VERSION=${S6_VERSION:-v2.2.0.1}
 ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
 
 # Kallisto options
-ARG KALLISTO_VERSION="v0.46.0"
+ARG KALLISTO_VERSION="v0.46.1"
 
 # TinyTex installation path
 ARG TINYTEX_DIR='/opt/tinytex'
@@ -221,8 +221,8 @@ RUN add-apt-repository ppa:cran/libgit2 \
   && chown -R root:staff /usr/local/lib/R/site-library \
   && chmod -R g+w ${TINYTEX_DIR} \
   && chmod -R g+wx "${TINYTEX_DIR}/bin" \
-  && echo "PATH=${PATH}" >> /usr/lib/R/etc/Renviron \
 ## Install kallisto
+  && echo "PATH=${PATH}" >> /usr/lib/R/etc/Renviron \
   && cd /tmp \
   && git clone https://github.com/pachterlab/kallisto.git \
   && cd kallisto \
@@ -238,8 +238,9 @@ RUN add-apt-repository ppa:cran/libgit2 \
 && echo "$CARTE_USER:$CARTE_PASSWORD" | chpasswd \
 && adduser $CARTE_USER staff \
 ## Set up S6-overlay init system
-  && wget --no-verbose -S -P /tmp/ https://github.com/just-containers/s6-overlay/releases/download/${S6_VERSION}/s6-overlay-amd64.tar.gz \
-  && tar xzf /tmp/s6-overlay-amd64.tar.gz -C / \
+  && wget --no-verbose -S -P /tmp/ https://github.com/just-containers/s6-overlay/releases/download/${S6_VERSION}/s6-overlay-amd64-installer \
+  && chmod +x /tmp/s6-overlay-amd64-installer \
+  && /tmp/s6-overlay-amd64-installer / \
 ## Install z.sh directory navigation utility
   && wget --no-verbose -S https://raw.githubusercontent.com/rupa/z/master/z.sh \
           -O /etc/profile.d/z.sh \
