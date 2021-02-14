@@ -140,6 +140,7 @@ RUN apt-get update \
   r-cran-formatr \
   r-cran-futile.logger \
   r-bioc-genefilter \
+  r-cran-gert \
   r-cran-ggally \
   r-cran-ggplot2 \
   r-cran-ggpubr \
