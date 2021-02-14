@@ -71,6 +71,7 @@ RUN apt-get update \
  ## system library dependencies
   libcairo2-dev \
   libcurl4-openssl-dev \
+  libgit2-27 \
   libhdf5-100 \
   libhdf5-dev \
   libmariadbd-dev \
