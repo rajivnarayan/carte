@@ -47,7 +47,8 @@ LABEL org.label-schema.name="carte-r" \
 COPY root /
 
 ## Install system dependencies
-RUN apt-get update \
+RUN add-apt-repository ppa:cran/libgit2\
+apt-get update \
   && BUILD_DEPS="\
  ## system tools
   autoconf \
@@ -71,7 +72,7 @@ RUN apt-get update \
  ## system library dependencies
   libcairo2-dev \
   libcurl4-openssl-dev \
-  libgit2-27 \
+  libgit2-dev \
   libhdf5-100 \
   libhdf5-dev \
   libmariadbd-dev \
