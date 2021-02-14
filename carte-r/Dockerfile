@@ -6,7 +6,7 @@
 #
 # docker build --no-cache=true --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') --build-arg BUILD_VERSION="test" -t carte-r:latest .
 
-FROM rocker/r-apt:disco
+FROM rocker/r-ubuntu:20.04
 
 ARG BUILD_DATE
 ARG BUILD_VERSION="latest"
@@ -20,7 +20,7 @@ ARG CARTE_PASSWORD='carte:)'
 ARG VOLUME_PATH="/work"
 
 # R config options
-ARG R_VERSION="3.6"
+ARG R_VERSION="4.0"
 # Path to User installed libraries
 ARG R_SITE_LIBRARY_PATH="/usr/local/lib/R/site-library"
 
@@ -47,8 +47,8 @@ LABEL org.label-schema.name="carte-r" \
 COPY root /
 
 ## Install system dependencies
-RUN add-apt-repository ppa:cran/libgit2\
-apt-get update \
+RUN add-apt-repository ppa:cran/libgit2 \
+  && apt-get update \
   && BUILD_DEPS="\
  ## system tools
   autoconf \
@@ -73,10 +73,10 @@ apt-get update \
   libcairo2-dev \
   libcurl4-openssl-dev \
   libgit2-dev \
-  libhdf5-100 \
+  libhdf5-103 \
   libhdf5-dev \
   libmariadbd-dev \
-  libmariadb-client-lgpl-dev \
+  libmariadb-dev-compat \
   libopenblas-dev \
   libpq-dev \
   libsasl2-dev \
@@ -122,7 +122,6 @@ apt-get update \
   r-cran-base64enc \
   r-cran-bigrquery \
   r-cran-biocmanager \
-  r-bioc-biomart \
   r-cran-bitops \
   r-cran-caret \
   r-cran-catools \
@@ -131,7 +130,6 @@ apt-get update \
   r-cran-data.table \
   r-cran-dendextend \
   r-cran-devtools \
-  r-bioc-deseq2 \
   r-cran-doparallel \
   r-cran-dplyr \
   r-cran-dt \
@@ -176,7 +174,6 @@ apt-get update \
   r-cran-rprojroot \
   r-cran-rrcov \
   r-cran-rtsne \
-  r-bioc-summarizedexperiment \
   r-cran-selectr \
   r-cran-seqinr \
   r-cran-tidyverse \
@@ -186,6 +183,8 @@ apt-get update \
   r-cran-xml2 \
   r-cran-yaml" \
   && apt-get install -y --no-install-recommends $BUILD_DEPS \
+  && wget -qO /tmp/hugo.deb https://github.com/gohugoio/hugo/releases/download/v0.80.0/hugo_0.80.0_Linux-64bit.deb \
+  && dpkg -i /tmp/hugo.db \
 ## Install missing R packages from CRAN and Bioconductor
   && install2.r --skipinstalled \
    --repos "http://bioconductor.org/packages/${R_VERSION}/bioc" \
@@ -195,6 +194,9 @@ apt-get update \
    'prada' \
    'Glimma' \
    'sva' \
+   'DESeq2' \
+   'SummarizedExperiment' \
+   'biomaRt' \
    'flexdashboard' \
    'uwot' \
 ## Install packages from Github
@@ -204,6 +206,7 @@ apt-get update \
    'pachterlab/sleuth' \
    'rstudio/crosstalk' \
    'jcheng5/d3scatter' \
+   'rstudio/blogdown' \
 ## Use tinytex for LaTeX installation
   && install2.r --error tinytex \
   ## Admin-based install of TinyTeX:
