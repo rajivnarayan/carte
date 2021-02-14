@@ -184,7 +184,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-yaml" \
   && apt-get install -y --no-install-recommends $BUILD_DEPS \
   && wget -qO /tmp/hugo.deb https://github.com/gohugoio/hugo/releases/download/v0.80.0/hugo_0.80.0_Linux-64bit.deb \
-  && dpkg -i /tmp/hugo.db \
+  && dpkg -i /tmp/hugo.deb \
 ## Install missing R packages from CRAN and Bioconductor
   && install2.r --skipinstalled \
    --repos "http://bioconductor.org/packages/${R_VERSION}/bioc" \
