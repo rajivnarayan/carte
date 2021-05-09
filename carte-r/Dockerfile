@@ -141,6 +141,9 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-foreach \
   r-cran-formatr \
   r-cran-futile.logger \
+  r-bioc-genomicranges \
+  r-bioc-genomeinfodb \
+  r-bioc-genomeinfodbdata \
   r-bioc-genefilter \
   r-cran-gert \
   r-cran-ggally \
@@ -180,6 +183,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-rtsne \
   r-cran-selectr \
   r-cran-seqinr \
+  r-bioc-summarizedexperiment \
   r-cran-tidyverse \
   r-cran-testthat \
   r-cran-r.utils \
@@ -199,11 +203,10 @@ RUN add-apt-repository ppa:cran/libgit2 \
    'GetoptLong' \
    'ComplexHeatmap' \
    'prada' \
-   'Glimma' \
    'sva' \
    'DESeq2' \
+   'Glimma' \
    'tximport' \
-   'SummarizedExperiment' \
    'biomaRt' \
    'flexdashboard' \
    'uwot' \
