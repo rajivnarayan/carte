@@ -21,6 +21,8 @@ ARG VOLUME_PATH="/work"
 
 # R config options
 ARG R_VERSION="4.0"
+ARG BIOCONDUCTOR_VERSION="3.12"
+
 # Path to User installed libraries
 ARG R_SITE_LIBRARY_PATH="/usr/local/lib/R/site-library"
 
@@ -142,6 +144,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-bioc-genefilter \
   r-cran-gert \
   r-cran-ggally \
+  r-cran-gghighlight \
   r-cran-ggplot2 \
   r-cran-ggpubr \
   r-cran-ggrepel \
@@ -149,6 +152,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-gridextra \
   r-cran-gtable \
   r-cran-ggvis \
+  r-cran-here \
   r-cran-highr \
   r-cran-htmltools \
   r-cran-httr \
@@ -178,6 +182,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-seqinr \
   r-cran-tidyverse \
   r-cran-testthat \
+  r-cran-r.utils \
   r-cran-usethis \
   r-cran-xgboost \
   r-cran-xml2 \
@@ -187,14 +192,17 @@ RUN add-apt-repository ppa:cran/libgit2 \
   && dpkg -i /tmp/hugo.deb \
 ## Install missing R packages from CRAN and Bioconductor
   && install2.r --skipinstalled \
-   --repos "http://bioconductor.org/packages/${R_VERSION}/bioc" \
+   --repos "http://bioconductor.org/packages/${BIOCONDUCTOR_VERSION}/bioc" \
    --repos "https://cloud.r-project.org" \
+   'apeglm' \
+   'ashr' \
    'GetoptLong' \
    'ComplexHeatmap' \
    'prada' \
    'Glimma' \
    'sva' \
    'DESeq2' \
+   'tximport' \
    'SummarizedExperiment' \
    'biomaRt' \
    'flexdashboard' \
