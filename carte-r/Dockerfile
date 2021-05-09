@@ -130,6 +130,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-circlize \
   r-cran-curl \
   r-cran-data.table \
+  r-bioc-delayedarray \
   r-cran-dendextend \
   r-cran-devtools \
   r-cran-doparallel \
