@@ -20,7 +20,7 @@ LABEL org.label-schema.name="sigtool-runtime" \
   org.label-schema.schema-version="1.0"
 
 # Copy sigtool run scripts
-COPY ./* /usr/local/bin/
+COPY ./assets/* /usr/local/bin/
 
 RUN install_packages \
   bc \
