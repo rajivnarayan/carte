@@ -15,9 +15,6 @@ ARG MCR_RELEASE='R2018b'
 # MCR version number (not needed for 2018b)
 ARG MCR_VERSION_NUM='v95'
 
-# Mountpint for externally mounted volume
-ARG VOLUME_PATH="/opt"
-
 # Install Location of MCR
 ARG MCR_INSTALL_PATH=${VOLUME_PATH}/mcr
 
@@ -37,8 +34,8 @@ LABEL org.label-schema.name="carte-mcr" \
       org.label-schema.vcs-url="https://github.com/rajivnarayan/carte/carte-mcr" \
       org.label-schema.schema-version="1.0"
 
-RUN apt-get update \
-&& apt-get install -y --no-install-recommends \
+# Use minidebs installer comannd instead of apt
+RUN install_packages \
   wget \
   tar \
   unzip \
@@ -65,6 +62,9 @@ RUN apt-get update \
 && apt-get autoremove -y \
 && apt-get autoclean -y \
 && rm -rf /var/lib/apt/lists/*
+## Remove extraneous MCR files
+&& rm -rf ${MCR_ROOT}/sys/jxbrowser-chromium \
+&& find  ${MCR_INSTALL_PATH} -name 'ja_JP' -type d -prune -exec rm -r {} \;
 
 # Configure library paths to MCR
 # Note that setting LD_LIBRARY_PATH breaks other apps so as a workaround
@@ -73,6 +73,5 @@ RUN apt-get update \
 ENV MCR_LD_LIBRARY_PATH "${MCR_ROOT}/runtime/glnxa64:${MCR_ROOT}/bin/glnxa64:${MCR_ROOT}/sys/os/glnxa64"
 ENV XAPPLRESDIR ${MCR_ROOT}/X11/app-defaults
 
-VOLUME ["$VOLUME_PATH"]
 
 CMD ["bash"]
