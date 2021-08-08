@@ -61,7 +61,7 @@ RUN install_packages \
 && rm -rf /tmp/* \
 && apt-get autoremove -y \
 && apt-get autoclean -y \
-&& rm -rf /var/lib/apt/lists/*
+&& rm -rf /var/lib/apt/lists/* \
 ## Remove extraneous MCR files
 && rm -rf ${MCR_ROOT}/sys/jxbrowser-chromium \
 && find  ${MCR_INSTALL_PATH} -name 'ja_JP' -type d -prune -exec rm -r {} \;
