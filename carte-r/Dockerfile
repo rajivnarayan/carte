@@ -148,6 +148,8 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-bioc-genefilter \
   r-cran-gert \
   r-cran-ggally \
+  r-cran-ggbeeswarm \
+  r-cran-ggridges \
   r-cran-gghighlight \
   r-cran-ggplot2 \
   r-cran-ggpubr \
@@ -168,6 +170,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-bioc-limma \
   r-cran-markdown \
   r-cran-mvtnorm \
+  r-cran-patchwork \
   r-cran-pcapp \
   r-cran-pheatmap \
   r-cran-plotly \
@@ -211,6 +214,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
    'biomaRt' \
    'flexdashboard' \
    'uwot' \
+   'ggbump' \
 ## Install packages from Github
   && installGithub.r --update FALSE \
    'gastonstat/arcdiagram' \
