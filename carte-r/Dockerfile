@@ -120,6 +120,8 @@ RUN add-apt-repository ppa:cran/libgit2 \
   libzmq3-dev \
   libopenmpi-dev \
   # Binary R packages
+  r-base-core \ #provides r-api
+  r-bioc-biocgenerics \ #provides r-api-bioc
   r-cran-arules \
   r-cran-base64enc \
   r-cran-bigrquery \
