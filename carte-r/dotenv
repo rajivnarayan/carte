@@ -5,6 +5,9 @@
 # REQUIRED Variables
 # =================
 
+# Docker image for CARTE-R
+CARTE_IMAGE=quay.io/rajivnarayan/carte-r:latest
+
 # A user password must be specified at runtime
 
 CARTE_PASSWORD=changeme:)

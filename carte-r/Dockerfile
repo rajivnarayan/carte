@@ -120,8 +120,10 @@ RUN add-apt-repository ppa:cran/libgit2 \
   libzmq3-dev \
   libopenmpi-dev \
   # Binary R packages
-  r-base-core \ #provides r-api
-  r-bioc-biocgenerics \ #provides r-api-bioc
+  # provides r-api
+  r-base-core \
+  # provides r-api-bioc
+  r-bioc-biocgenerics \ 
   r-cran-arules \
   r-cran-base64enc \
   r-cran-bigrquery \
@@ -132,7 +134,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-circlize \
   r-cran-curl \
   r-cran-data.table \
-  r-bioc-delayedarray \
+  #r-bioc-delayedarray \
   r-cran-dendextend \
   r-cran-devtools \
   r-cran-doparallel \
@@ -150,7 +152,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-bioc-genefilter \
   r-cran-gert \
   r-cran-ggally \
-  r-cran-ggbeeswarm \
+  #r-cran-ggbeeswarm \
   r-cran-ggridges \
   r-cran-gghighlight \
   r-cran-ggplot2 \
@@ -189,7 +191,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-rtsne \
   r-cran-selectr \
   r-cran-seqinr \
-  r-bioc-summarizedexperiment \
+  #r-bioc-summarizedexperiment \
   r-cran-tidyverse \
   r-cran-testthat \
   r-cran-r.utils \
@@ -217,6 +219,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
    'flexdashboard' \
    'uwot' \
    'ggbump' \
+   'ggbeeswarm' \
 ## Install packages from Github
   && installGithub.r --update FALSE \
    'gastonstat/arcdiagram' \
@@ -229,7 +232,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   && install2.r --error tinytex \
   ## Admin-based install of TinyTeX:
   && wget -qO- \
-    "https://github.com/yihui/tinytex/raw/master/tools/install-unx.sh" | \
+    "https://yihui.org/tinytex/install-unx.sh" | \
     TINYTEX_DIR=${TINYTEX_DIR} sh -s - --admin --no-path \
   && ${TINYTEX_DIR}/bin/*/tlmgr path add \
   && tlmgr install ae inconsolata listings metafont mfware parskip pdfcrop tex \

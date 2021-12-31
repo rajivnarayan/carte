@@ -8,7 +8,7 @@ services:
 # Base container with command-line interface
 # Usage: docker-compose run base
   base:
-    image: "quay.io/rajivnarayan/carte-r:latest"
+    image: ${CARTE_IMAGE}
     env_file: .env
     environment:
         PASSWORD: ${CARTE_PASSWORD?:err}
@@ -27,7 +27,7 @@ services:
 # Usage: docker-compose up rstudio
 # Access rstudio 
   rstudio :
-    image: "quay.io/rajivnarayan/carte-r:latest"
+    image: ${CARTE_IMAGE}
     # read variables from the .env file
     env_file: .env
     environment:
@@ -53,7 +53,7 @@ services:
 
 # Enable OpenCPU
   opencpu :
-    image: "quay.io/rajivnarayan/carte-r:latest"
+    image: ${CARTE_IMAGE}
     # read variables from the .env file
     env_file: .env
     environment:
@@ -81,7 +81,7 @@ services:
 # The host folder specified by $BIND_VOLUME is 
 # mounted in the container as /work
   full :
-    image: "quay.io/rajivnarayan/carte-r:latest"
+    image: ${CARTE_IMAGE}
 
     # read variables from the .env file
     env_file: .env
