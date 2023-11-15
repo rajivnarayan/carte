@@ -13,21 +13,29 @@ CARTE_IMAGE=quay.io/rajivnarayan/carte-r:latest
 CARTE_PASSWORD=changeme:)
 
 # Specify fullpath to volume to bind-mount to container
+# home folder will be mounted at ~/ within the container
+BIND_VOLUME_HOME=/home/user
+# workspace folder will be mounted as ~/workspace within the container
+BIND_VOLUME_WORKSPACE=/path/to/workspace
 
-BIND_VOLUME=/home/user
-
-# UID of the container user must match the hosts UID 
+# UID of the container user must match the hosts UID
 # to set file permissions correctly
+# Use id -u to check your host id
 
 HOST_UID=1000
 
 # Optional variables
 # ===================
+# Rstudio options
+# To use a specific Rstudio version set both of the following variables
+
+# RSTUDIO_OS=bionic
+# RSTUDIO_VERSION=2023.03.1-446
 
 # Port mappings
-# Specify host ports (aka published ports) that will be 
+# Specify host ports (aka published ports) that will be
 # mapped to corresponding services in the container
-# Ensure that the host ports are available, otherwise the service 
+# Ensure that the host ports are available, otherwise the service
 # will not be accessible from the host
 
 RSTUDIO_HOST_PORT=8787

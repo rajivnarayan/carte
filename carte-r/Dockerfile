@@ -1,27 +1,37 @@
 # CARTE-R A Container based Analysis RunTime Environment for R
 #
-# 
-# Based on Rocker r-apt image
-# https://github.com/rocker-org/rocker-versioned
+#
+# Based on the Rocker r-ubuntu image
+# https://rocker-project.org/images/other/r-ubuntu.html
+# https://github.com/rocker-org/ubuntu-lts
 #
 # docker build --no-cache=true --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') --build-arg BUILD_VERSION="test" -t carte-r:latest .
 
-FROM rocker/r-ubuntu:20.04
+FROM rocker/r-ubuntu:focal
 
 ARG BUILD_DATE
 ARG BUILD_VERSION="latest"
-# non-root user 
-# Change using --build-arg CARTE_USER='myname" 
+# non-root user
+# Change using --build-arg CARTE_USER='myname"
 ARG CARTE_USER='carte'
 # Change using --build-arg CARTE_PASSWORD="mypassword"
 ARG CARTE_PASSWORD='carte:)'
 
-# Mountpint for externally mounted volume
+# Mountpont for externally mounted volume
 ARG VOLUME_PATH="/work"
 
 # R config options
-ARG R_VERSION="4.0"
-ARG BIOCONDUCTOR_VERSION="3.12"
+ARG R_VERSION="4.2"
+ARG BIOCONDUCTOR_VERSION="3.16"
+
+# Rstudio options
+# operating system, should ideally match the base image
+ENV RSTUDIO_OS=${RSTUDIO_OS:-focal}
+# specific version
+ENV RSTUDIO_VERSION=${RSTUDIO_VERSION:-latest}
+
+#SPARK options
+ENV SPARK_VERSION=3.1
 
 # Path to User installed libraries
 ARG R_SITE_LIBRARY_PATH="/usr/local/lib/R/site-library"
@@ -30,23 +40,26 @@ ARG R_SITE_LIBRARY_PATH="/usr/local/lib/R/site-library"
 ARG S6_VERSION
 ENV S6_VERSION=${S6_VERSION:-v2.2.0.1}
 ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
+# divert signals from PID1 to CMD
+ENV S6_CMD_RECEIVE_SIGNALS=1
 
 # Kallisto options
 ARG KALLISTO_VERSION="v0.46.1"
 
 # TinyTex installation path
 ARG TINYTEX_DIR='/opt/tinytex'
-
 LABEL org.label-schema.name="carte-r" \
-	  org.label-schema.description="CARTE-R is a container image that provides runtime environment for data analysis using the R programming language" \
-	  org.label-schema.version="$BUILD_VERSION" \
-	  org.label-schema.build-date="$BUILD_DATE" \
-	  org.label-schema.license="GPL-2.0" \
-      org.label-schema.vcs-url="https://github.com/rajivnarayan/carte/carte-r" \
-      org.label-schema.schema-version="1.0"
+  org.label-schema.description="CARTE-R is a container image that provides runtime environment for data analysis using the R programming language" \
+  org.label-schema.version="$BUILD_VERSION" \
+  org.label-schema.build-date="$BUILD_DATE" \
+  org.label-schema.license="GPL-2.0" \
+  org.label-schema.vcs-url="https://github.com/rajivnarayan/carte/carte-r" \
+  org.label-schema.schema-version="1.0"
 
 # copy config files
 COPY root /
+# copy packages to tmp location
+COPY pkg /tmp/pkg
 
 ## Install system dependencies
 RUN add-apt-repository ppa:cran/libgit2 \
@@ -71,7 +84,13 @@ RUN add-apt-repository ppa:cran/libgit2 \
   gdebi-core \
   openssh-client \
   rsync \
+  hdf5-tools \
+  seqtk \
+  samtools \
+  bowtie2 \
  ## system library dependencies
+  ## cytolib dependency
+  libboost-filesystem-dev \
   libcairo2-dev \
   libcurl4-openssl-dev \
   libgit2-dev \
@@ -112,6 +131,9 @@ RUN add-apt-repository ppa:cran/libgit2 \
   #libcurl4-gnutls-dev \
   ## for V8-based javascript wrappers
   libv8-dev \
+  ## Python3 high-throughput genome sequencing read analysis utilities
+  python3-htseq \
+  python3-pip \
   ## R CMD Check wants qpdf to check pdf sizes, or throws a Warning
   qpdf \
   ## For building PDF manuals
@@ -119,11 +141,12 @@ RUN add-apt-repository ppa:cran/libgit2 \
   ## parallelization
   libzmq3-dev \
   libopenmpi-dev \
+  default-jre-headless \
   # Binary R packages
   # provides r-api
   r-base-core \
   # provides r-api-bioc
-  r-bioc-biocgenerics \ 
+  r-bioc-biocgenerics \
   r-cran-arules \
   r-cran-base64enc \
   r-cran-bigrquery \
@@ -132,8 +155,10 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-caret \
   r-cran-catools \
   r-cran-circlize \
+  r-cran-clustermq \
   r-cran-curl \
   r-cran-data.table \
+  r-cran-dbscan \
   #r-bioc-delayedarray \
   r-cran-dendextend \
   r-cran-devtools \
@@ -141,7 +166,9 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-dplyr \
   r-cran-dt \
   r-bioc-edger \
+  r-cran-egg \
   r-cran-e1071 \
+  r-cran-eulerr \
   r-cran-fastcluster \
   r-cran-foreach \
   r-cran-formatr \
@@ -150,6 +177,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-bioc-genomeinfodb \
   r-bioc-genomeinfodbdata \
   r-bioc-genefilter \
+  r-bioc-geoquery \
   r-cran-gert \
   r-cran-ggally \
   #r-cran-ggbeeswarm \
@@ -160,10 +188,13 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-ggrepel \
   r-cran-glmnet \
   r-cran-gridextra \
+  r-cran-gsubfn \
+  r-cran-gt \
   r-cran-gtable \
   r-cran-ggvis \
   r-cran-here \
   r-cran-highr \
+  r-cran-hmisc \
   r-cran-htmltools \
   r-cran-httr \
   r-cran-huxtable \
@@ -172,15 +203,21 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-jsonlite \
   r-cran-knitr \
   r-bioc-limma \
+  r-cran-mlmetrics \
   r-cran-markdown \
+  r-cran-microbenchmark \
   r-cran-mvtnorm \
+  r-cran-paws \
   r-cran-patchwork \
   r-cran-pcapp \
   r-cran-pheatmap \
   r-cran-plotly \
+  r-cran-processx \
+  r-cran-rpostgres \
   r-cran-psych \
   r-bioc-qvalue \
   r-cran-ranger \
+  r-cran-rattle \
   r-cran-rcolorbrewer \
   r-bioc-rhdf5lib \
   r-bioc-rhdf5 \
@@ -191,15 +228,34 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-rtsne \
   r-cran-selectr \
   r-cran-seqinr \
+  r-cran-seurat \
+  r-bioc-singscore \
+  r-cran-skimr \
+  r-cran-statmod \
+  #r-cran-statmodel \
   #r-bioc-summarizedexperiment \
+  #r-cran-sparklyr \
+  r-cran-targets \
   r-cran-tidyverse \
   r-cran-testthat \
   r-cran-r.utils \
   r-cran-usethis \
+  r-cran-venndiagram \
+  r-cran-wgcna \
+  r-cran-xaringan \
   r-cran-xgboost \
   r-cran-xml2 \
-  r-cran-yaml" \
+  r-cran-yaml \
+  ## toolkit for processing next-gen sequencing data
+  subread" \
   && apt-get install -y --no-install-recommends $BUILD_DEPS \
+# Install AWS CLI latest
+  && mkdir -p /tmp/awscli \
+  && cd /tmp/awscli \
+  && wget -qO awscli.zip 'https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip' \
+  && unzip awscli.zip \
+  && ./aws/install \
+## Hugo
   && wget -qO /tmp/hugo.deb https://github.com/gohugoio/hugo/releases/download/v0.80.0/hugo_0.80.0_Linux-64bit.deb \
   && dpkg -i /tmp/hugo.deb \
 ## Install missing R packages from CRAN and Bioconductor
@@ -207,10 +263,20 @@ RUN add-apt-repository ppa:cran/libgit2 \
    --repos "http://bioconductor.org/packages/${BIOCONDUCTOR_VERSION}/bioc" \
    --repos "https://cloud.r-project.org" \
    'apeglm' \
+   'argparser' \
    'ashr' \
+   'flowCore' \
+   'cmapR' \
    'GetoptLong' \
+   'GSVA' \
+   'ggsurvfit' \
+   'ggvenn' \
+   'ggvenndiagram' \
    'ComplexHeatmap' \
+   'maftools' \
+   'noctua' \
    'prada' \
+   'Rsubread' \
    'sva' \
    'DESeq2' \
    'Glimma' \
@@ -220,14 +286,19 @@ RUN add-apt-repository ppa:cran/libgit2 \
    'uwot' \
    'ggbump' \
    'ggbeeswarm' \
-## Install packages from Github
-  && installGithub.r --update FALSE \
-   'gastonstat/arcdiagram' \
-   'cmap/cmapR' \
-   'pachterlab/sleuth' \
-   'rstudio/crosstalk' \
-   'jcheng5/d3scatter' \
-   'rstudio/blogdown' \
+   'sparklyr' \
+   'ggrastr' \
+   'tryCatchLog' \
+   'jinjar' \
+   'inspectdf' \
+## copy/paste utility
+   && install2.r --repos 'https://milesmcbain.r-universe.dev' 'datapasta' \
+## Install SRA toolkit
+  && wget -qO/tmp/setup-apt.sh https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/3.0.2/setup-apt.sh \
+  && /bin/sh /tmp/setup-apt.sh \
+## Install packages from Github, fails due to API limits, using local install
+## gastonstat/arcdiagram, jcheng5/crosstalk, jcheng5/d3scatter
+  && find '/tmp/pkg' -name '*.zip' | while read pkg; do install2.r --error $pkg; done \
 ## Use tinytex for LaTeX installation
   && install2.r --error tinytex \
   ## Admin-based install of TinyTeX:
@@ -242,17 +313,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   && chown -R root:staff /usr/local/lib/R/site-library \
   && chmod -R g+w ${TINYTEX_DIR} \
   && chmod -R g+wx "${TINYTEX_DIR}/bin" \
-## Install kallisto
-  && echo "PATH=${PATH}" >> /usr/lib/R/etc/Renviron \
-  && cd /tmp \
-  && git clone https://github.com/pachterlab/kallisto.git \
-  && cd kallisto \
-  && git checkout -b ${KALLISTO_VERSION} \
-  && mkdir build; cd build \
-  && cmake .. \
-  && make \
-  && make install \
-## Setup non-root user and groups
+# Setup non-root user and groups
 ## First remove the docker user created by r-apt
 && userdel -r docker \
 && useradd --create-home --shell /bin/bash $CARTE_USER \
@@ -265,6 +326,10 @@ RUN add-apt-repository ppa:cran/libgit2 \
 ## Install z.sh directory navigation utility
   && wget --no-verbose -S https://raw.githubusercontent.com/rupa/z/master/z.sh \
           -O /etc/profile.d/z.sh \
+## Install spark
+  && Rscript -e "library(sparklyr); spark_install('${SPARK_VERSION}');" \
+## Install binary R arrow package (https://arrow.apache.org/docs/r/articles/install.html)
+&& Rscript '/tmp/pkg/install_arrow.R' \
 ## Clean up source install
   && cd / \
   && chmod +x /entrypoint.sh \
@@ -280,4 +345,4 @@ VOLUME ["$VOLUME_PATH"]
 # s6-overlay
 ENTRYPOINT ["/init"]
 
-CMD ["su ${CARTE_USER}"]
+CMD ["su", "${CARTE_USER}"]

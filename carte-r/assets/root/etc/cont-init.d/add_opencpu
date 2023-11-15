@@ -1,0 +1,21 @@
+#!/usr/bin/with-contenv bash
+
+# Install OpenCPU if true
+# Specify with -e ADD_OPENCPU=true
+ADD_OPENCPU=${ADD_OPENCPU:=none}
+
+if [[ $ADD_OPENCPU == 'true' ]]; then
+	echo "Installing OpenCPU server to the container..."
+	
+	add-apt-repository -y ppa:opencpu/opencpu-2.1
+  apt-get update
+  apt-get install -y opencpu-server elinks
+  apt-mark hold opencpu-server
+
+else
+  echo "Not installing OpenCPU, ADD_OPENCPU not specified
+  To install at runtime append -e ADD_OPENCPU=true to the docker run command
+  To install within a container run:
+  export ADD_OPENCPU=true && bash /etc/cont-init.d/add_opencpu
+"  
+fi

@@ -20,7 +20,7 @@ services:
     volumes:
       # bind mount specified host folder
     - type: bind
-      source: ${BIND_VOLUME:?err}
+      source: ${BIND_VOLUME_HOME:?err}
       target: /home/carte
 
 # With R-studio server
@@ -41,10 +41,14 @@ services:
         ADD_RSTUDIO: "true"
     
     volumes:
-      # bind mount specified host folder
+      # bind mount home folder
       - type: bind
-        source: ${BIND_VOLUME:?err}
+        source: ${BIND_VOLUME_HOME:?err}
         target: /home/carte
+      # bind mount workspace folder
+      - type: bind
+        source: ${BIND_VOLUME_WORKSPACE:?err}
+        target: /home/carte/workspace
     # Port mapping from the container to the host
     ports:
     # Rstudio: http://localhost:8787
@@ -69,7 +73,7 @@ services:
     volumes:
       # bind mount specified host folder
       - type: bind
-        source: ${BIND_VOLUME:?err}
+        source: ${BIND_VOLUME_HOME:?err}
         target: /home/carte
     # Port mapping from the container to the host
     ports:
@@ -103,7 +107,7 @@ services:
     volumes:
       # bind mount specified host folder
       - type: bind
-        source: ${BIND_VOLUME:?err}
+        source: ${BIND_VOLUME_HOME:?err}
         target: /home/carte
    
     # Port mapping from the container to the host

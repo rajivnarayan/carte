@@ -1,0 +1,2 @@
+# this service is down by default
+# start with s6-svc -u
