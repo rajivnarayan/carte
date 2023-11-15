@@ -1,0 +1,19 @@
+name: Carte-R Docker Image CI
+
+on:
+  push:
+    paths: 'carte-r/**'
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: carte-r
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build the Docker image
+      run: |
+        cd assets
+        docker build -f ../Dockerfile --no-cache --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') --build-arg BUILD_VERSION="latest" -t carte-r:latest .
