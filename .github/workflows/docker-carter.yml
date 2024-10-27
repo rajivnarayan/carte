@@ -26,5 +26,6 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./carte-r/assets
+          file: ./carte-r/assets/Dockerfile
           push: true
           tags: askrajiv/carte-r:latest
