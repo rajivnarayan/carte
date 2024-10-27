@@ -21,8 +21,8 @@ ARG CARTE_PASSWORD='carte:)'
 ARG VOLUME_PATH="/work"
 
 # R config options
-ARG R_VERSION="4.2"
-ARG BIOCONDUCTOR_VERSION="3.16"
+ARG R_VERSION="4.4"
+ARG BIOCONDUCTOR_VERSION="3.19"
 
 # Rstudio options
 # operating system, should ideally match the base image
@@ -85,6 +85,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   openssh-client \
   rsync \
   hdf5-tools \
+  poppler-utils \
   seqtk \
   samtools \
   bowtie2 \
@@ -142,6 +143,8 @@ RUN add-apt-repository ppa:cran/libgit2 \
   libzmq3-dev \
   libopenmpi-dev \
   default-jre-headless \
+  # for mounting external drives
+  cifs-utils \
   # Binary R packages
   # provides r-api
   r-base-core \
@@ -155,6 +158,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-caret \
   r-cran-catools \
   r-cran-circlize \
+  r-cran-cbioportalr \
   r-cran-clustermq \
   r-cran-curl \
   r-cran-data.table \
@@ -184,6 +188,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-ggridges \
   r-cran-gghighlight \
   r-cran-ggplot2 \
+  r-cran-ggpmisc \
   r-cran-ggpubr \
   r-cran-ggrepel \
   r-cran-glmnet \
@@ -192,6 +197,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-gt \
   r-cran-gtable \
   r-cran-ggvis \
+  r-cran-hdf5r \
   r-cran-here \
   r-cran-highr \
   r-cran-hmisc \
@@ -205,7 +211,9 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-bioc-limma \
   r-cran-mlmetrics \
   r-cran-markdown \
+  r-cran-matrix \
   r-cran-microbenchmark \
+  r-cran-modeest \
   r-cran-mvtnorm \
   r-cran-paws \
   r-cran-patchwork \
@@ -261,13 +269,18 @@ RUN add-apt-repository ppa:cran/libgit2 \
 ## Install missing R packages from CRAN and Bioconductor
   && install2.r --skipinstalled \
    --repos "http://bioconductor.org/packages/${BIOCONDUCTOR_VERSION}/bioc" \
+   --repos "http://bioconductor.org/packages/${BIOCONDUCTOR_VERSION}/data/experiment" \
    --repos "https://cloud.r-project.org" \
    'apeglm' \
    'argparser' \
+   'ArrayExpress' \
    'ashr' \
+   'ExpressionAtlas' \
+   'cytolib' \
    'flowCore' \
    'cmapR' \
    'GetoptLong' \
+   'ggh4x' \
    'GSVA' \
    'ggsurvfit' \
    'ggvenn' \
@@ -291,8 +304,26 @@ RUN add-apt-repository ppa:cran/libgit2 \
    'tryCatchLog' \
    'jinjar' \
    'inspectdf' \
+   'swimplot' \
+   'SingleR' \
+   'celldex' \
+   'EnhancedVolcano' \
+   'scran' \
+   'dittoSeq' \
+   'cBioPortalData' \
+   'AnVIL' \
+## Install missing R *source* packages from CRAN and Bioconductor
+   && install2.r \
+   --repos "http://bioconductor.org/packages/${BIOCONDUCTOR_VERSION}/bioc" \
+   --repos "http://bioconductor.org/packages/${BIOCONDUCTOR_VERSION}/data/experiment" \
+   --repos "https://cloud.r-project.org" \
+   --type "source" \
+   # new IRLBA needed to fix breaking changes to Matrix, See: https://github.com/bwlewis/irlba/issues/70
+   'irlba' \
 ## copy/paste utility
    && install2.r --repos 'https://milesmcbain.r-universe.dev' 'datapasta' \
+## Install IRLBA from source to fix https://github.com/bwlewis/irlba/issues/70
+   && install2.r 'irlba' --type 'source' \
 ## Install SRA toolkit
   && wget -qO/tmp/setup-apt.sh https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/3.0.2/setup-apt.sh \
   && /bin/sh /tmp/setup-apt.sh \

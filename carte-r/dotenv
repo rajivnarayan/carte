@@ -26,6 +26,12 @@ HOST_UID=1000
 
 # Optional variables
 # ===================
+
+# Set to true to run container with extended privileges
+# Needed for CIFS mounting drives
+
+PRIVILEGED_MODE=false
+
 # Rstudio options
 # To use a specific Rstudio version set both of the following variables
 
