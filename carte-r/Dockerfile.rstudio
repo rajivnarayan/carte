@@ -1,4 +1,4 @@
-FROM 276385367356.dkr.ecr.us-east-1.amazonaws.com/mrt-carte-r:latest
+FROM askrajiv/carte-r:latest
 
 ENV ADD_RSTUDIO=none
 
