@@ -1,13 +1,16 @@
 # CARTE-R A Container based Analysis RunTime Environment for R
 #
-#
 # Based on the Rocker r-ubuntu image
 # https://rocker-project.org/images/other/r-ubuntu.html
 # https://github.com/rocker-org/ubuntu-lts
 #
 # docker build --no-cache=true --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') --build-arg BUILD_VERSION="test" -t carte-r:latest .
 
-FROM rocker/r-ubuntu:focal
+# Note with rocker/r-ubuntu the R version is not stable and
+# R_VERSION and BIOCONDUCTOR_VERSION should be set accrodingly
+#FROM rocker/r-ubuntu:noble
+FROM rocker/r2u:noble
+#FROM rocker/r-ver:4.5
 
 ARG BUILD_DATE
 ARG BUILD_VERSION="latest"
@@ -21,17 +24,17 @@ ARG CARTE_PASSWORD='carte:)'
 ARG VOLUME_PATH="/work"
 
 # R config options
-ARG R_VERSION="4.4"
-ARG BIOCONDUCTOR_VERSION="3.19"
+ARG R_VERSION="4.5"
+ARG BIOCONDUCTOR_VERSION="3.23"
 
 # Rstudio options
 # operating system, should ideally match the base image
-ENV RSTUDIO_OS=${RSTUDIO_OS:-focal}
+ENV RSTUDIO_OS=${RSTUDIO_OS:-noble}
 # specific version
 ENV RSTUDIO_VERSION=${RSTUDIO_VERSION:-latest}
 
 #SPARK options
-ENV SPARK_VERSION=3.1
+ENV SPARK_VERSION=3.5
 
 # Path to User installed libraries
 ARG R_SITE_LIBRARY_PATH="/usr/local/lib/R/site-library"
@@ -43,8 +46,9 @@ ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
 # divert signals from PID1 to CMD
 ENV S6_CMD_RECEIVE_SIGNALS=1
 
-# Kallisto options
-ARG KALLISTO_VERSION="v0.46.1"
+# Append Openblas library
+ARG OPENBLAS_URL=
+ENV LD_LIBRARY_PATH="/opt/OpenBLAS/lib:${LD_LIBRARY_PATH}"
 
 # TinyTex installation path
 ARG TINYTEX_DIR='/opt/tinytex'
@@ -60,10 +64,11 @@ LABEL org.label-schema.name="carte-r" \
 COPY root /
 # copy packages to tmp location
 COPY pkg /tmp/pkg
+# copy OPENBLAS installer
+COPY install_openblas.sh /tmp
+COPY insert_bspm_option.sh /tmp
 
-## Install system dependencies
-RUN add-apt-repository ppa:cran/libgit2 \
-  && apt-get update \
+RUN apt-get update \
   && BUILD_DEPS="\
  ## system tools
   autoconf \
@@ -80,10 +85,13 @@ RUN add-apt-repository ppa:cran/libgit2 \
   vim \
   sudo \
   gosu \
+  software-properties-common \
+  policykit-1 \
   # for installing local packages r-studio and shiny
   gdebi-core \
   openssh-client \
   rsync \
+  wget \
   hdf5-tools \
   poppler-utils \
   seqtk \
@@ -95,11 +103,14 @@ RUN add-apt-repository ppa:cran/libgit2 \
   libcairo2-dev \
   libcurl4-openssl-dev \
   libgit2-dev \
-  libhdf5-103 \
+  libhdf5-103-1t64 \
   libhdf5-dev \
   libmariadbd-dev \
   libmariadb-dev-compat \
   libopenblas-dev \
+  libopenblas0-pthread \
+  #libblis4-pthread \
+  #intel-mkl \
   libpq-dev \
   libsasl2-dev \
   libssh2-1-dev \
@@ -109,7 +120,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   unixodbc-dev \
   zlib1g-dev \
  ## Matlab MCR dependencies
-  libncurses5 \
+  #miss_noble libncurses5 \
   libxext6 \
   libxmu6 \
   libxt6 \
@@ -161,7 +172,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-cbioportalr \
   r-cran-clustermq \
   r-cran-curl \
-  r-cran-data.table \
+  #r-cran-data.table \
   r-cran-dbscan \
   #r-bioc-delayedarray \
   r-cran-dendextend \
@@ -174,6 +185,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-e1071 \
   r-cran-eulerr \
   r-cran-fastcluster \
+  r-bioc-fgsea \
   r-cran-foreach \
   r-cran-formatr \
   r-cran-futile.logger \
@@ -186,7 +198,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-ggally \
   #r-cran-ggbeeswarm \
   r-cran-ggridges \
-  r-cran-gghighlight \
+  #r-cran-gghighlight \
   r-cran-ggplot2 \
   r-cran-ggpmisc \
   r-cran-ggpubr \
@@ -197,6 +209,8 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-gt \
   r-cran-gtable \
   r-cran-ggvis \
+  r-bioc-gsva \
+  r-cran-genieclust \
   r-cran-hdf5r \
   r-cran-here \
   r-cran-highr \
@@ -214,6 +228,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-matrix \
   r-cran-microbenchmark \
   r-cran-modeest \
+  r-cran-msigdbr \
   r-cran-mvtnorm \
   r-cran-paws \
   r-cran-patchwork \
@@ -225,7 +240,9 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-psych \
   r-bioc-qvalue \
   r-cran-ranger \
-  r-cran-rattle \
+  #r-cran-rattle \
+  r-cran-ropenblas \
+  r-bioc-org.hs.eg.db \
   r-cran-rcolorbrewer \
   r-bioc-rhdf5lib \
   r-bioc-rhdf5 \
@@ -237,6 +254,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   r-cran-selectr \
   r-cran-seqinr \
   r-cran-seurat \
+  r-cran-seuratobject \
   r-bioc-singscore \
   r-cran-skimr \
   r-cran-statmod \
@@ -257,6 +275,10 @@ RUN add-apt-repository ppa:cran/libgit2 \
   ## toolkit for processing next-gen sequencing data
   subread" \
   && apt-get install -y --no-install-recommends $BUILD_DEPS \
+  # update bspm option in Rprofile.site
+  && bash /tmp/insert_bspm_option.sh \
+  # Install latest openBLAS
+  # && bash /tmp/install_openblas.sh /tmp /opt/OpenBLAS \
 # Install AWS CLI latest
   && mkdir -p /tmp/awscli \
   && cd /tmp/awscli \
@@ -267,6 +289,8 @@ RUN add-apt-repository ppa:cran/libgit2 \
   && wget -qO /tmp/hugo.deb https://github.com/gohugoio/hugo/releases/download/v0.80.0/hugo_0.80.0_Linux-64bit.deb \
   && dpkg -i /tmp/hugo.deb \
 ## Install missing R packages from CRAN and Bioconductor
+  && install2.r  --repos "https://cloud.r-project.org"  \
+   'BH' \
   && install2.r --skipinstalled \
    --repos "http://bioconductor.org/packages/${BIOCONDUCTOR_VERSION}/bioc" \
    --repos "http://bioconductor.org/packages/${BIOCONDUCTOR_VERSION}/data/experiment" \
@@ -281,7 +305,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
    'cmapR' \
    'GetoptLong' \
    'ggh4x' \
-   'GSVA' \
+   'ggprism' \
    'ggsurvfit' \
    'ggvenn' \
    'ggvenndiagram' \
@@ -320,10 +344,18 @@ RUN add-apt-repository ppa:cran/libgit2 \
    --type "source" \
    # new IRLBA needed to fix breaking changes to Matrix, See: https://github.com/bwlewis/irlba/issues/70
    'irlba' \
+   'data.table' \
+   'vctrs' \
+   'rlang' \
 ## copy/paste utility
    && install2.r --repos 'https://milesmcbain.r-universe.dev' 'datapasta' \
 ## Install IRLBA from source to fix https://github.com/bwlewis/irlba/issues/70
    && install2.r 'irlba' --type 'source' \
+   # Need more recent >=v2.13 To fix gzip parsing error
+   'R.utils' \
+   # SCrnaseq deps
+   'stringi' \
+   'scrapper' \
 ## Install SRA toolkit
   && wget -qO/tmp/setup-apt.sh https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/3.0.2/setup-apt.sh \
   && /bin/sh /tmp/setup-apt.sh \
@@ -345,9 +377,10 @@ RUN add-apt-repository ppa:cran/libgit2 \
   && chmod -R g+w ${TINYTEX_DIR} \
   && chmod -R g+wx "${TINYTEX_DIR}/bin" \
 # Setup non-root user and groups
-## First remove the docker user created by r-apt
-&& userdel -r docker \
-&& useradd --create-home --shell /bin/bash $CARTE_USER \
+## First remove the docker and ubuntu users so carte gets UID 1000
+ && userdel -r docker \
+ && userdel -r ubuntu \
+ && useradd --create-home --shell /bin/bash $CARTE_USER \
 && echo "$CARTE_USER:$CARTE_PASSWORD" | chpasswd \
 && adduser $CARTE_USER staff \
 ## Set up S6-overlay init system
@@ -358,7 +391,7 @@ RUN add-apt-repository ppa:cran/libgit2 \
   && wget --no-verbose -S https://raw.githubusercontent.com/rupa/z/master/z.sh \
           -O /etc/profile.d/z.sh \
 ## Install spark
-  && Rscript -e "library(sparklyr); spark_install('${SPARK_VERSION}');" \
+#&& Rscript -e "library(sparklyr); spark_install('${SPARK_VERSION}');" \
 ## Install binary R arrow package (https://arrow.apache.org/docs/r/articles/install.html)
 && Rscript '/tmp/pkg/install_arrow.R' \
 ## Clean up source install
