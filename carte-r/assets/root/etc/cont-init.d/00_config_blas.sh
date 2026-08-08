@@ -19,7 +19,11 @@ if [[ $AUTOSELECT_BLAS == 'true' ]]; then
 	    update-alternatives --set libblas.so.3-x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/libmkl_rt.so
 	    update-alternatives --set liblapack.so.3-x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/libmkl_rt.so
 	    printf LP64 > /var/run/s6/container_environment/MKL_INTERFACE_LAYER
-	    printf GNU > /var/run/s6/container_environment/MKL_THREADING_LAYER
+	    # Use SEQUENTIAL to avoid conflict with libgomp already loaded by rsession
+	    printf SEQUENTIAL > /var/run/s6/container_environment/MKL_THREADING_LAYER
+	    # Also write to Renviron so R sees it regardless of how rsession is launched
+	    echo 'MKL_THREADING_LAYER=SEQUENTIAL' >> /usr/lib/R/etc/Renviron
+	    echo 'MKL_INTERFACE_LAYER=LP64' >> /usr/lib/R/etc/Renviron
 	    echo "[blas] Intel CPU detected using using MKL"
 	    ;;
 	  AuthenticAMD*)
