@@ -1,0 +1,38 @@
+# CARTE-R configurations
+# All variables are specified in the .env file
+# Copy the dotenv file to .env and edit as needed
+
+services:
+  base: &base
+    image: ${CARTE_IMAGE}
+    env_file: .env
+    environment: &base_env
+        PASSWORD: ${CARTE_PASSWORD?:err}
+        SUDO: "true"
+        # user id of carte user
+        USERID: ${HOST_UID}
+    entrypoint: ['/init', 'su', 'carte']
+    volumes:
+      # bind mount home folder
+      - type: bind
+        source: ${BIND_VOLUME_HOME:?err}
+        target: /home/carte
+      # bind mount workspace folder
+      - type: bind
+        source: ${BIND_VOLUME_WORKSPACE:?err}
+        target: /home/carte/workspace
+    privileged: ${PRIVILEGED_MODE}
+
+# With static R-studio server image
+  rstudio_static: &rstudio
+    <<: *base
+    image: ${CARTE_IMAGE_RSTUDIO}
+    environment: &rstudio_env
+        <<: *base_env
+        ADD_RSTUDIO: "none"
+    # Port mapping from the container to the host
+    ports:
+    # Rstudio: http://localhost:8787
+      - "${RSTUDIO_HOST_PORT}:8787"
+    # Override entrypoint to just use /init (not 'su carte') so RStudio service starts
+    entrypoint: ['/init']

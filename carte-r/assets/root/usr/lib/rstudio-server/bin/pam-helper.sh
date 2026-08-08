@@ -1,10 +1,12 @@
 #!/usr/bin/env sh
 
 ## Enforces the custom password specified in the PASSWORD environment variable
-## The accepted RStudio username is the same as the USER environment variable (i.e., local user name).
+## Accepts login from any valid system user with the matching PASSWORD.
 
 set -o nounset
 
 IFS='' read -r password
 
-[ "${USER}" = "${1}" ] && [ "${PASSWORD}" = "${password}" ]
+# Only check the password - the username just needs to exist as a system user
+getent passwd "${1}" > /dev/null 2>&1 && [ "${PASSWORD}" = "${password}" ]
+

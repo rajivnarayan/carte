@@ -1,0 +1,11 @@
+FROM 276385367356.dkr.ecr.us-east-1.amazonaws.com/mrt-carte-r:latest
+
+ENV ADD_RSTUDIO=none
+
+RUN apt update && \
+export ADD_RSTUDIO=true && \
+bash /etc/cont-init.d/add_rstudio && \
+rm -f /etc/services.d/rstudio/down
+
+ENTRYPOINT ["/init"]
+
