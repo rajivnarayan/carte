@@ -1,11 +1,12 @@
-# carte-r 
+# carte-r
 
-## <u>C</u>ontainerized <u>A</u>nalysis <u>R</u>un <u>T</u>ime <u>E</u>nvironment for <u>R</u>
+## **C**ontainerized **A**nalysis **R**un**T**ime **E**nvironment for **R**
 
-## Overview 
+## Overview
+
 carte-r provides a customizable Docker container for data analysis using the R programming language.
 
-- Docker image: [https://quay.io/repository/rajivnarayan/carte-r](https://quay.io/repository/rajivnarayan/carte-r)
+- Docker image: [https://hub.docker.com/repository/docker/askrajiv/carte-r](https://hub.docker.com/repository/docker/askrajiv/carte-r)
 - Presentations
   - [Talk at Boston Computational Biology and Bioinformatics Meetup](https://docs.google.com/presentation/d/12IYun6xaBOPVdTIMsmFnTdH7LfP26pOV0ZBdzP4MEsY/edit?usp=sharing)
 
@@ -13,86 +14,157 @@ carte-r provides a customizable Docker container for data analysis using the R p
 
 This project grew out of a need to run various scientific-computing and data-science workflows in R across multiple hosts in a reproducible manner. In particular the requirements were:
 
-* support for a configurable and feature-rich computational environment frequently needed to process and explore real-world data
-* an IDE for exploratory data analysis and developing and testing R code
-* the ability to quickly expose custom algorithms via APIs for enabling web applications
-
+- Support for a configurable and feature-rich computational environment frequently needed to process and explore real-world data
+- An IDE for exploratory data analysis and developing and testing R code
+- The ability to quickly expose custom algorithms via APIs for enabling web applications
 
 ## Features
 
-carte-r is a single Docker image that provides command-line access to a customized R environment with the ability to enable additional software components (like rstudio, opencpu and shiny) at runtime.
+carte-r is a single Docker image that provides command-line access to a customized R environment with the ability to enable additional software components (RStudio, OpenCPU, Shiny) at runtime.
 
-The image integrates several software components developed by others:
+The image integrates several software components:
 
-* The R analysis environment is based on the r-apt image from the [rocker project](https://github.com/rocker-org/rocker)
-
-  * The image includes a version specific R installation with 200+ packages from CRAN and Bioconductor focused primarily on computational biology, data analysis and report generation.
-
-  * In addition pre-configured CRAN and the marutter PPA repositories provide easy access to to over 4000+ pre-compiled binary versions of most frequently employed R packages
-
-* Several additional services that can be optionally enabled at runtime based on :
-  * Browser based IDE for R development via [Rstudio Server]()
-  * [OpenCPU](https://www.opencpu.org/) server to create HTTP based API 
-  * [Shiny](https://rstudio.com/products/shiny/shiny-server/) server to serve R-based interactive web applications
-
-* The [s6-overlay](https://github.com/just-containers/s6-overlay) init system to manage multiple processes in a single container
+- The R analysis environment is based on the [rocker/r2u](https://github.com/rocker-org/r2u) image
+  - Includes a version-specific R installation with 200+ packages from CRAN and Bioconductor focused on computational biology, data analysis, and report generation
+  - Pre-configured CRAN and marutter PPA repositories provide easy access to 4000+ pre-compiled binary R packages
+- Optional services enabled at runtime:
+  - Browser-based IDE via [RStudio Server](https://posit.co/products/open-source/rstudio-server/)
+  - [OpenCPU](https://www.opencpu.org/) server for HTTP-based R APIs
+  - [Shiny](https://shiny.posit.co/r/articles/host/shiny-server/) server for interactive web applications
+- CPU-specific BLAS library auto-selection at runtime (`AUTOSELECT_BLAS=true`): MKL for Intel, BLIS for AMD, OpenBLAS otherwise
+- The [s6-overlay](https://github.com/just-containers/s6-overlay) init system to manage multiple processes within a single container
 
 ## Getting Started
 
-### Using the docker command
+### Using docker compose (recommended)
 
-* Start a container with just R + packages and mount the host $HOME folder at /work within the container
+**Initial setup**
 
-`docker run -v $HOME:/work -it -e 'PASSWORD=changeme:)' -e 'USERID=$UID' --rm quay.io/rajivnarayan/carte-r:latest /bin/bash `
+Clone the repo and navigate to the carte-r directory:
 
-* Start r-studio server
+```bash
+git clone https://github.com/rajivnarayan/carte.git
+cd carte/carte-r
+```
 
-`docker run -p 8787:8787 -p 3838:3838 -p 8080:80 -v $HOME:/work -it -e 'PASSWORD=letmein:)' -e ADD_RSTUDIO=true -e SUDO=true -e USERID=$UID --rm quay.io/rajivnarayan/carte-r:latest /bin/bash`
+Copy the dotenv template to `.env` and edit as needed:
 
-### Using docker-compose
+```bash
+cp dotenv .env
+```
 
-* Initial setup
-	* Clone this repo and change 
+Edit `.env` and set at minimum:
+- `CARTE_PASSWORD` — password for the `carte` user (**required**, must not be left as default)
+- `BIND_VOLUME_HOME` — full path to your home directory on the host
+- `BIND_VOLUME_WORKSPACE` — full path to your workspace directory on the host
+- `HOST_UID` — your host user ID (run `id -u` to check)
 
-	`cd carte/carte-r`
+**Start a base container with command-line access**
 
-	* Copy the dotenv file to .env and change the variables as needed
+```bash
+docker compose run base
+```
 
-	`cp dotenv to .env`
+Type `R` to start the R interpreter.
 
-* Start a base container with command-line access
+**Start RStudio Server**
 
-`docker-compose run base`
+```bash
+docker compose up rstudio
+```
 
-Type `R` to start the R interpreter
+Access RStudio at http://localhost:8787 (or the port set by `RSTUDIO_HOST_PORT` in `.env`).
 
-* Start a full-fledged container with Rstudio and opencpu
+Login with username `carte` and the password set in `CARTE_PASSWORD`.
 
-`docker-compose up full`
+**Start a full container with RStudio, OpenCPU, and Shiny**
 
-Access Rstudio by visting http://localhost:8787 in a web browser (change the port to $RSTUDIO_HOST_PORT if changed in the .env file)
+```bash
+docker compose up full
+```
 
-Access OpenCpu http://localhost:8080/ocpu or the value of $OPENCPU_HTTP_PORT in the .env file
+- RStudio: http://localhost:8787
+- OpenCPU: http://localhost:8080/ocpu
+- Shiny: http://localhost:3838
 
-### Building a new image using the Docker file
+### Using the docker command directly
 
-`docker build --no-cache=true --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') --build-arg BUILD_VERSION="test" -t carte-r:latest`
+Start a base container with R and mount the host `$HOME` at `/home/carte`:
 
-#### Docker Environment variables
+```bash
+docker run -it --rm \
+  -e PASSWORD=<your_password> \
+  -e USERID=$(id -u) \
+  -v $HOME:/home/carte \
+  askrajiv/carte-r:latest /init su carte
+```
 
-- `PASSWORD`: **Required**, sets the carte user password at runtime 
-- `SUDO`: Adds carte user to sudoers file if true, Default is false
-- `USERID`: Sets the UID of the user, default is 1000
-- `GROUPID`: Sets the GID, default is 1000
-- `ADD_RSTUDIO`: Install R-Studio Server within the container if true. Default is false
-- `ADD_OPENCPU`: Install OpenCPU if true. Default is false
-- `ADD_SHINY`: Install Shiny serever if true. Default is false
+Start RStudio Server:
 
-### Container ports
-Services if enabled run on the following ports within the container:
+```bash
+docker run -it --rm \
+  -p 8787:8787 \
+  -e PASSWORD=<your_password> \
+  -e USERID=$(id -u) \
+  -e ADD_RSTUDIO=true \
+  -e SUDO=true \
+  -v $HOME:/home/carte \
+  -v /path/to/workspace:/home/carte/workspace \
+  askrajiv/carte-r:latest /init
+```
 
-- `RSTUDIO_PORT=8787`
-- `SHINY_PORT=3838`
-- `OPENCPU_HTTP_PORT=80`
-- `OPENCPU_HTTPS_PORT=443`
+### Building a new image
 
+```bash
+./build.sh
+```
+
+Or manually:
+
+```bash
+docker build --platform=linux/amd64 \
+  --no-cache=true \
+  --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+  --build-arg BUILD_VERSION="latest" \
+  -f Dockerfile \
+  -t askrajiv/carte-r:latest \
+  assets/
+```
+
+### Static RStudio image
+
+A pre-built image with RStudio baked in (faster startup, no install at runtime) is available at
+[askrajiv/carte-r-rstudio](https://hub.docker.com/repository/docker/askrajiv/carte-r-rstudio).
+
+To build and push it:
+
+```bash
+./build_rstudio.sh
+```
+
+## Environment Variables
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `PASSWORD` | Yes | — | Password for the `carte` user |
+| `USERID` | No | `1000` | UID of the container user, should match host UID |
+| `GROUPID` | No | `1000` | GID of the container user |
+| `SUDO` | No | `false` | Add `carte` user to sudoers if `true` |
+| `ADD_RSTUDIO` | No | `false` | Install and start RStudio Server if `true` |
+| `ADD_OPENCPU` | No | `false` | Install and start OpenCPU if `true` |
+| `ADD_SHINY` | No | `false` | Install and start Shiny Server if `true` |
+| `AUTOSELECT_BLAS` | No | `false` | Auto-select CPU-optimized BLAS (MKL/BLIS/OpenBLAS) if `true` |
+| `PRIVILEGED_MODE` | No | `false` | Run with extended privileges (needed for CIFS mounts) |
+
+## Container Ports
+
+Services run on the following ports within the container:
+
+| Service | Port |
+|---|---|
+| RStudio | `8787` |
+| Shiny | `3838` |
+| OpenCPU HTTP | `80` |
+| OpenCPU HTTPS | `443` |
+
+Host port mappings are configured via `.env` (see `RSTUDIO_HOST_PORT`, `SHINY_HOST_PORT`, `OPENCPU_HTTP_HOST_PORT`).

@@ -6,7 +6,7 @@
 # =================
 
 # Docker image for CARTE-R
-CARTE_IMAGE=quay.io/rajivnarayan/carte-r:latest
+CARTE_IMAGE=askrajiv/carte-r:latest
 CARTE_IMAGE_RSTUDIO=askrajiv/carte-r-rstudio:latest
 
 # A user password must be specified at runtime
