@@ -6,7 +6,7 @@
 
 # docker build --no-cache=true --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') --build-arg BUILD_VERSION="test" -t carte-mcr:latest .
 
-FROM bitnami/minideb:buster
+FROM bitnami/minideb:bookworm
 
 ARG BUILD_DATE
 ARG BUILD_VERSION="test"
@@ -27,7 +27,7 @@ ENV MCR_ROOT="${MCR_INSTALL_PATH}/${MCR_VERSION_NUM}"
 # installer URL
 ARG MCR_URL="https://ssd.mathworks.com/supportfiles/downloads/${MCR_RELEASE}/deployment_files/${MCR_RELEASE}/installers/glnxa64/MCR_${MCR_RELEASE}_glnxa64_installer.zip"
 
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 LABEL org.label-schema.name="carte-mcr" \
 	  org.label-schema.description="CARTE-MCR is a container image that provides Matlab's container runtime (MCR)" \
@@ -73,8 +73,8 @@ RUN install_packages \
 # Note that setting LD_LIBRARY_PATH breaks other apps so as a workaround
 # save paths to alternate variable instead and use as:
 # LD_LIBRARY_PATH=$MCR_LIBRARY_PATH <matlab_program> args
-ENV MCR_LD_LIBRARY_PATH "${MCR_ROOT}/runtime/glnxa64:${MCR_ROOT}/bin/glnxa64:${MCR_ROOT}/sys/os/glnxa64"
-ENV XAPPLRESDIR ${MCR_ROOT}/X11/app-defaults
+ENV MCR_LD_LIBRARY_PATH="${MCR_ROOT}/runtime/glnxa64:${MCR_ROOT}/bin/glnxa64:${MCR_ROOT}/sys/os/glnxa64"
+ENV XAPPLRESDIR="${MCR_ROOT}/X11/app-defaults"
 
 
 CMD ["bash"]
