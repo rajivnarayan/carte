@@ -22,6 +22,11 @@ carte-r is a Docker image for data analysis in R, providing a reproducible envir
 
 A static variant with RStudio pre-installed for faster startup is available at [askrajiv/carte-r-rstudio](https://hub.docker.com/repository/docker/askrajiv/carte-r-rstudio).
 
+## Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) 20.10 or later
+- [Docker Compose](https://docs.docker.com/compose/install/) v2.0 or later (included with Docker Desktop; verify with `docker compose version`)
+
 ## Getting Started
 
 ### Using docker compose (recommended)
@@ -39,11 +44,23 @@ Copy the dotenv template and edit it:
 cp dotenv .env
 ```
 
-Set at minimum:
-- `CARTE_PASSWORD` — password for the `carte` user (**required**)
-- `BIND_VOLUME_HOME` — full path to your home directory on the host
-- `BIND_VOLUME_WORKSPACE` — full path to your workspace on the host
-- `HOST_UID` — your host user ID (`id -u`)
+Edit `.env` and set at minimum:
+
+```bash
+# Required: password for the carte user
+CARTE_PASSWORD=your_secure_password
+
+# Full path to your home directory on the host
+BIND_VOLUME_HOME=/home/yourname
+
+# Full path to your workspace on the host
+BIND_VOLUME_WORKSPACE=/home/yourname/projects
+
+# Your host user ID (run: id -u)
+HOST_UID=1000
+```
+
+> **Note:** If `BIND_VOLUME_HOME` or `BIND_VOLUME_WORKSPACE` paths do not exist on the host, Docker will fail to start the container. Create them first if needed.
 
 **Start a base container with R command-line access:**
 
@@ -69,6 +86,8 @@ docker compose up full
 - OpenCPU: http://localhost:8080/ocpu
 - Shiny: http://localhost:3838
 
+> **Note:** Host ports are configured in `.env` via `RSTUDIO_HOST_PORT`, `SHINY_HOST_PORT`, and `OPENCPU_HTTP_HOST_PORT`. If a port is already in use on your host, change the corresponding variable before starting the container.
+
 ### Using docker run
 
 **Base container:**
@@ -78,6 +97,7 @@ docker run -it --rm \
   -e PASSWORD=<your_password> \
   -e USERID=$(id -u) \
   -v $HOME:/home/carte \
+  -v /path/to/workspace:/home/carte/workspace \
   askrajiv/carte-r:latest /init su carte
 ```
 
@@ -124,3 +144,44 @@ docker run -it --rm \
 | OpenCPU HTTPS | `443` |
 
 Host port mappings are configured in `.env` via `RSTUDIO_HOST_PORT`, `SHINY_HOST_PORT`, and `OPENCPU_HTTP_HOST_PORT`.
+
+## Troubleshooting
+
+**Port already in use**
+
+If a service fails to start with a port binding error, another process is using that port. Either stop the conflicting process or change the host port in `.env`:
+
+```bash
+# Find what's using port 8787
+lsof -i :8787
+# or
+ss -tlnp | grep 8787
+```
+
+Then update the relevant port variable in `.env` (e.g. `RSTUDIO_HOST_PORT=8788`) and restart.
+
+**Permission errors on mounted volumes**
+
+Ensure `HOST_UID` in `.env` matches your host user ID:
+
+```bash
+id -u
+```
+
+**Viewing container logs**
+
+```bash
+# docker compose
+docker compose logs rstudio
+
+# docker run (if container is still running)
+docker logs <container_id>
+```
+
+**RStudio or services not starting**
+
+Services like RStudio are installed at container startup when `ADD_RSTUDIO=true`. This adds a few seconds on first run. Check logs if the service doesn't appear after ~30 seconds:
+
+```bash
+docker compose logs -f rstudio
+```
