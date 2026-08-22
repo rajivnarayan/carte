@@ -5,7 +5,7 @@
 # cd assets; docker build -f ../Dockerfile --no-cache=true --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') --build-arg BUILD_VERSION="test" -t sigtool-runtime:latest .
 
 # Matlab Compiler Runtime Docker image
-FROM quay.io/rajivnarayan/carte-mcr-v95:latest
+FROM askrajiv/carte-mcr-v95:latest
 
 ARG BUILD_DATE
 ARG BUILD_VERSION="latest"

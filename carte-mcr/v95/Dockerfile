@@ -12,8 +12,11 @@ ARG BUILD_DATE
 ARG BUILD_VERSION="test"
 # Matlab compiler runtime release
 ARG MCR_RELEASE='R2018b'
-# MCR version number (not needed for 2018b)
+# MCR version number
 ARG MCR_VERSION_NUM='v95'
+
+# Mountpoint for externally mounted volume
+ARG VOLUME_PATH="/opt"
 
 # Install Location of MCR
 ARG MCR_INSTALL_PATH=${VOLUME_PATH}/mcr
