@@ -10,9 +10,11 @@ ADD_RSTUDIO=${ADD_RSTUDIO:=none}
 : RSTUDIO_VERSION=${RSTUDIO_VERSION:?RSTUDIO_VERSION not set}
 
 if [[ $RSTUDIO_VERSION == 'latest' ]]; then
- RSTUDIO_URL="https://www.rstudio.org/download/latest/stable/server/${RSTUDIO_OS}/rstudio-server-latest-amd64.deb"
+ # Posit removed the "latest" symlink; resolve the newest stable .deb URL
+ # from Posit's published downloads manifest.
+ RSTUDIO_URL=$(rstudio_latest_url.sh "${RSTUDIO_OS}")
 else
- RSTUDIO_URL="http://download2.rstudio.org/server/${RSTUDIO_OS}/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb"
+ RSTUDIO_URL="https://download2.rstudio.org/server/${RSTUDIO_OS}/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb"
 fi
 
 # Verify if the URL exists

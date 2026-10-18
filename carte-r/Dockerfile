@@ -20,6 +20,11 @@ ARG CARTE_USER='carte'
 # Change using --build-arg CARTE_PASSWORD="mypassword"
 ARG CARTE_PASSWORD='carte:)'
 
+# Optional token for the GitHub-sourced R packages, only needed if the
+# anonymous API rate limit is hit. Note build args are visible in image
+# history, so use a short-lived token.
+ARG GITHUB_PAT=""
+
 # Mountpont for externally mounted volume
 ARG VOLUME_PATH="/work"
 
@@ -28,10 +33,12 @@ ARG R_VERSION="4.5"
 ARG BIOCONDUCTOR_VERSION="3.23"
 
 # Rstudio options
-# operating system, should ideally match the base image
-ENV RSTUDIO_OS=${RSTUDIO_OS:-noble}
-# specific version
-ENV RSTUDIO_VERSION=${RSTUDIO_VERSION:-latest}
+# operating system: Posit ships a single amd64 .deb under the "jammy" path
+# for Ubuntu 22/24 (there is no separate "noble" download path)
+ENV RSTUDIO_OS=${RSTUDIO_OS:-jammy}
+# specific version, or 'latest' to resolve the newest stable build at
+# container init from Posit's downloads manifest (see add_rstudio)
+ENV RSTUDIO_VERSION=${RSTUDIO_VERSION:-2026.07.0-139}
 
 #SPARK options
 ENV SPARK_VERSION=3.5
@@ -272,6 +279,26 @@ RUN apt-get update \
   r-cran-xgboost \
   r-cran-xml2 \
   r-cran-yaml \
+  ## Azimuth hard dependencies, all available as r2u binaries.
+  ## Azimuth itself is GitHub-only and is installed further down.
+  ## BSgenome.Hsapiens.UCSC.hg38/ensembldb are load-time requirements of the
+  ## package even for RNA-only annotation, they are not optional.
+  r-bioc-annotationfilter \
+  r-bioc-bsgenome \
+  r-bioc-bsgenome.hsapiens.ucsc.hg38 \
+  r-bioc-dirichletmultinomial \
+  r-bioc-ensembldb \
+  r-bioc-glmgampoi \
+  r-bioc-protgenerics \
+  r-bioc-pwalign \
+  r-bioc-seqlogo \
+  r-bioc-tfbstools \
+  r-cran-rcpproll \
+  r-cran-shinybs \
+  r-cran-shinydashboard \
+  r-cran-shinyjs \
+  r-cran-signac \
+  r-cran-tfmpvalue \
   ## toolkit for processing next-gen sequencing data
   subread" \
   && apt-get install -y --no-install-recommends $BUILD_DEPS \
@@ -362,6 +389,17 @@ RUN apt-get update \
 ## Install packages from Github, fails due to API limits, using local install
 ## gastonstat/arcdiagram, jcheng5/crosstalk, jcheng5/d3scatter
   && find '/tmp/pkg' -name '*.zip' | while read pkg; do install2.r --error $pkg; done \
+## Azimuth annotation dependency with no r2u binary (r2u carries v75, Azimuth needs v86).
+## Lives in the Bioconductor *annotation* repo, which the blocks above do not list.
+  && install2.r --skipinstalled --error \
+   --repos "http://bioconductor.org/packages/${BIOCONDUCTOR_VERSION}/data/annotation" \
+   --repos "https://cloud.r-project.org" \
+   'EnsDb.Hsapiens.v86' \
+## Azimuth, SeuratData and loupeR are not on CRAN/Bioconductor.
+## upgrade='never' keeps remotes from rebuilding the apt-installed Seurat stack from source.
+## Pass --build-arg GITHUB_PAT=<token> if the anonymous API rate limit is hit.
+  && Rscript -e "remotes::install_github(c('satijalab/azimuth@master', 'satijalab/seurat-data', '10XGenomics/loupeR'), upgrade = 'never', dependencies = TRUE)" \
+  && Rscript -e "stopifnot(sapply(c('Azimuth','SeuratData','loupeR'), requireNamespace, quietly = TRUE))" \
 ## Use tinytex for LaTeX installation
   && install2.r --error tinytex \
   ## Admin-based install of TinyTeX:
