@@ -192,6 +192,7 @@ RUN apt-get update \
   r-cran-e1071 \
   r-cran-eulerr \
   r-cran-fastcluster \
+  r-cran-fastshap \
   r-bioc-fgsea \
   r-cran-foreach \
   r-cran-formatr \
