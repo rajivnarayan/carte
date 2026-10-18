@@ -39,8 +39,11 @@ PRIVILEGED_MODE=false
 # Rstudio options
 # To use a specific Rstudio version set both of the following variables
 
-# RSTUDIO_OS=bionic
-# RSTUDIO_VERSION=2023.03.1-446
+# Posit ships one amd64 .deb under the "jammy" path for Ubuntu 22/24;
+# there is no "noble" path. RSTUDIO_VERSION=latest is resolved from
+# Posit's downloads manifest at container start.
+# RSTUDIO_OS=jammy
+# RSTUDIO_VERSION=2026.07.0-139
 
 # Port mappings
 # Specify host ports (aka published ports) that will be

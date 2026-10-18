@@ -29,7 +29,15 @@ if [ "$USERID" -ne 1000 ]
     userdel carte
     echo "creating new $USER with UID $USERID"
     useradd --create-home --shell /bin/bash --uid $USERID $USER
-    chown -R $USER /home/$USER
+    ## /home/$USER is normally a bind mount that already has the right owner.
+    ## Recursing into it would chown every file in the mounted tree, including
+    ## nested mounts such as ~/workspace, which takes hours over NFS/EFS.
+    if [ "$(stat -c %u /home/$USER)" = "$USERID" ]
+      then
+        echo "/home/$USER is already owned by UID $USERID, skipping recursive chown"
+      else
+        chown -R $USER /home/$USER
+    fi
     usermod -a -G staff $USER
 elif [ "$USER" != "carte" ]
   then
