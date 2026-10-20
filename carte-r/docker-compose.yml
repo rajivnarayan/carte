@@ -38,6 +38,21 @@ services:
       - "${RSTUDIO_HOST_PORT}:8787"
     entrypoint: "/init"
 
+# With R-studio server pre-installed in the image (faster startup)
+  rstudio_static: &rstudio_static
+    <<: *base
+    image: ${CARTE_IMAGE_RSTUDIO:?err}
+    platform: linux/amd64
+    environment:
+        <<: *base_env
+        # RStudio is pre-installed in the image; don't reinstall at startup
+        ADD_RSTUDIO: "none"
+    # Port mapping from the container to the host
+    ports:
+    # Rstudio: http://localhost:8787
+      - "${RSTUDIO_HOST_PORT}:8787"
+    entrypoint: "/init"
+
 # With OpenCPU
   opencpu: &opencpu
     <<: *base

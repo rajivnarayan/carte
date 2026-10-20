@@ -76,6 +76,16 @@ docker compose up rstudio
 
 Open http://localhost:8787 and log in with username `carte` and the password from `CARTE_PASSWORD`.
 
+**Start RStudio Server from the static image (RStudio pre-installed, faster startup):**
+
+```bash
+docker compose up rstudio_static
+# or, to pull the latest image first:
+./bin/static_rstudio_helper.sh
+```
+
+The image is set by `CARTE_IMAGE_RSTUDIO` in `.env`.
+
 **Start a full container with RStudio, OpenCPU, and Shiny:**
 
 ```bash
