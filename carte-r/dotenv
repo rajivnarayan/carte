@@ -31,6 +31,12 @@ HOST_UID=1000
 # Set to true to pick CPU-specific BLAS library on run time
 AUTOSELECT_BLAS=false
 
+# ARM CPUs only (with AUTOSELECT_BLAS=true): set to true to use
+# Arm Performance Libraries instead of OpenBLAS. Downloads ~1GB at
+# container start. Installing accepts the Arm EULA.
+USE_ARMPL=false
+# ARMPL_VERSION=26.07
+
 # Set to true to run container with extended privileges
 # Needed for CIFS mounting drives
 
