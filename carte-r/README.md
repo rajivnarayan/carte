@@ -17,7 +17,7 @@ carte-r is a Docker image for data analysis in R, providing a reproducible envir
   - [RStudio Server](https://posit.co/products/open-source/rstudio-server/) — browser-based R IDE
   - [OpenCPU](https://www.opencpu.org/) — HTTP API server for R
   - [Shiny Server](https://shiny.posit.co/r/articles/host/shiny-server/) — interactive web applications
-- Auto-selects a CPU-optimized BLAS library at runtime (`AUTOSELECT_BLAS=true`): MKL (Intel), BLIS (AMD), or OpenBLAS (other)
+- Auto-selects a CPU-optimized BLAS library at runtime (`AUTOSELECT_BLAS=true`): MKL (Intel), BLIS (AMD), OpenBLAS (other), or optionally Arm Performance Libraries on ARM (`USE_ARMPL=true`)
 - [s6-overlay](https://github.com/just-containers/s6-overlay) init system for managing multiple services in a single container
 
 A static variant with RStudio pre-installed for faster startup is available at [askrajiv/carte-r-rstudio](https://hub.docker.com/repository/docker/askrajiv/carte-r-rstudio).
@@ -150,6 +150,8 @@ docker run -it --rm \
 | `ADD_OPENCPU` | No | `false` | Install and start OpenCPU |
 | `ADD_SHINY` | No | `false` | Install and start Shiny Server |
 | `AUTOSELECT_BLAS` | No | `false` | Auto-select CPU-optimized BLAS library |
+| `USE_ARMPL` | No | `false` | On ARM CPUs, use Arm Performance Libraries instead of OpenBLAS (requires `AUTOSELECT_BLAS=true`; ~1GB download at startup; accepts the Arm EULA) |
+| `ARMPL_VERSION` | No | `26.07` | Arm Performance Libraries version to install |
 | `PRIVILEGED_MODE` | No | `false` | Run with extended privileges (needed for CIFS mounts) |
 
 ## Container Ports
