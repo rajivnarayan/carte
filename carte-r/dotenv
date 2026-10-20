@@ -39,9 +39,10 @@ PRIVILEGED_MODE=false
 # Rstudio options
 # To use a specific Rstudio version set both of the following variables
 
-# Posit ships one amd64 .deb under the "jammy" path for Ubuntu 22/24;
+# Posit ships one .deb under the "jammy" path for Ubuntu 22/24;
 # there is no "noble" path. RSTUDIO_VERSION=latest is resolved from
-# Posit's downloads manifest at container start.
+# Posit's downloads manifest at container start. On arm64 only daily
+# builds exist, so RSTUDIO_VERSION is ignored and the latest daily is used.
 # RSTUDIO_OS=jammy
 # RSTUDIO_VERSION=2026.07.0-139
 

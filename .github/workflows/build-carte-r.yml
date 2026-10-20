@@ -8,11 +8,28 @@ on:
       - 'carte-r/**'
   workflow_dispatch:
 
+# Each platform builds natively on its own runner (emulating a multi-GB R
+# build under QEMU takes hours), pushes by digest, and a merge job then
+# publishes a single multi-arch manifest under the usual tags.
+
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
 
     steps:
+      - name: Prepare
+        run: echo "PLATFORM_PAIR=${PLATFORM//\//-}" >> $GITHUB_ENV
+        env:
+          PLATFORM: ${{ matrix.platform }}
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -25,26 +42,83 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and push by digest
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: carte-r/assets
           file: carte-r/Dockerfile
-          platforms: linux/amd64
-          push: true
+          platforms: ${{ matrix.platform }}
           no-cache: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/carte-r:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/carte-r:${{ github.sha }}
+          outputs: type=image,name=${{ secrets.DOCKERHUB_USERNAME }}/carte-r,push-by-digest=true,name-canonical=true,push=true
           build-args: |
             BUILD_DATE=${{ github.event.head_commit.timestamp }}
             BUILD_VERSION=${{ github.sha }}
 
-  build-and-push-rstudio:
+      - name: Export digest
+        run: |
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-carte-r-${{ env.PLATFORM_PAIR }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
     runs-on: ubuntu-latest
     needs: build-and-push
 
     steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-carte-r-linux-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Create and push multi-arch manifest
+        working-directory: ${{ runner.temp }}/digests
+        env:
+          IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/carte-r
+        run: |
+          docker buildx imagetools create \
+            -t "$IMAGE:latest" \
+            -t "$IMAGE:${{ github.sha }}" \
+            $(printf "$IMAGE@sha256:%s " *)
+          docker buildx imagetools inspect "$IMAGE:${{ github.sha }}"
+
+  build-and-push-rstudio:
+    needs: merge
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+      - name: Prepare
+        run: echo "PLATFORM_PAIR=${PLATFORM//\//-}" >> $GITHUB_ENV
+        env:
+          PLATFORM: ${{ matrix.platform }}
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -57,14 +131,60 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push static RStudio image
+      - name: Build and push static RStudio image by digest
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: carte-r
           file: carte-r/Dockerfile.rstudio
-          platforms: linux/amd64
-          push: true
+          platforms: ${{ matrix.platform }}
           no-cache: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/carte-r-rstudio:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/carte-r-rstudio:${{ github.sha }}
+          outputs: type=image,name=${{ secrets.DOCKERHUB_USERNAME }}/carte-r-rstudio,push-by-digest=true,name-canonical=true,push=true
+          build-args: |
+            CARTE_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/carte-r:${{ github.sha }}
+
+      - name: Export digest
+        run: |
+          mkdir -p ${{ runner.temp }}/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-carte-r-rstudio-${{ env.PLATFORM_PAIR }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge-rstudio:
+    runs-on: ubuntu-latest
+    needs: build-and-push-rstudio
+
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-carte-r-rstudio-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Create and push multi-arch manifest
+        working-directory: ${{ runner.temp }}/digests
+        env:
+          IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/carte-r-rstudio
+        run: |
+          docker buildx imagetools create \
+            -t "$IMAGE:latest" \
+            -t "$IMAGE:${{ github.sha }}" \
+            $(printf "$IMAGE@sha256:%s " *)
+          docker buildx imagetools inspect "$IMAGE:${{ github.sha }}"

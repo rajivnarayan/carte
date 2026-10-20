@@ -33,8 +33,10 @@ ARG R_VERSION="4.5"
 ARG BIOCONDUCTOR_VERSION="3.23"
 
 # Rstudio options
-# operating system: Posit ships a single amd64 .deb under the "jammy" path
-# for Ubuntu 22/24 (there is no separate "noble" download path)
+# operating system: Posit ships a single .deb under the "jammy" path
+# for Ubuntu 22/24 (there is no separate "noble" download path).
+# On arm64 Posit only publishes daily builds, so add_rstudio ignores
+# RSTUDIO_VERSION there and installs the latest daily (as Rocker does).
 ENV RSTUDIO_OS=${RSTUDIO_OS:-jammy}
 # specific version, or 'latest' to resolve the newest stable build at
 # container init from Posit's downloads manifest (see add_rstudio)
@@ -303,6 +305,9 @@ RUN apt-get update \
   ## toolkit for processing next-gen sequencing data
   subread" \
   && apt-get install -y --no-install-recommends $BUILD_DEPS \
+  # Debian (amd64/arm64) and kernel (x86_64/aarch64) arch names for downloads
+  && DEB_ARCH=$(dpkg --print-architecture) \
+  && UNAME_ARCH=$(uname -m) \
   # update bspm option in Rprofile.site
   && bash /tmp/insert_bspm_option.sh \
   # Install latest openBLAS
@@ -310,11 +315,12 @@ RUN apt-get update \
 # Install AWS CLI latest
   && mkdir -p /tmp/awscli \
   && cd /tmp/awscli \
-  && wget -qO awscli.zip 'https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip' \
+  && wget -qO awscli.zip "https://awscli.amazonaws.com/awscli-exe-linux-${UNAME_ARCH}.zip" \
   && unzip awscli.zip \
   && ./aws/install \
 ## Hugo
-  && wget -qO /tmp/hugo.deb https://github.com/gohugoio/hugo/releases/download/v0.80.0/hugo_0.80.0_Linux-64bit.deb \
+  && HUGO_ARCH=$([ "$DEB_ARCH" = arm64 ] && echo ARM64 || echo 64bit) \
+  && wget -qO /tmp/hugo.deb "https://github.com/gohugoio/hugo/releases/download/v0.80.0/hugo_0.80.0_Linux-${HUGO_ARCH}.deb" \
   && dpkg -i /tmp/hugo.deb \
 ## Install missing R packages from CRAN and Bioconductor
   && install2.r  --repos "https://cloud.r-project.org"  \
@@ -384,9 +390,11 @@ RUN apt-get update \
    # SCrnaseq deps
    'stringi' \
    'scrapper' \
-## Install SRA toolkit
-  && wget -qO/tmp/setup-apt.sh https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/3.0.2/setup-apt.sh \
-  && /bin/sh /tmp/setup-apt.sh \
+## Install SRA toolkit (NCBI ships no Linux arm64 build, so amd64 only)
+  && if [ "$DEB_ARCH" = amd64 ]; then \
+       wget -qO/tmp/setup-apt.sh https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/3.0.2/setup-apt.sh \
+       && /bin/sh /tmp/setup-apt.sh; \
+     else echo "Skipping SRA toolkit, not available for $DEB_ARCH"; fi \
 ## Install packages from Github, fails due to API limits, using local install
 ## gastonstat/arcdiagram, jcheng5/crosstalk, jcheng5/d3scatter
   && find '/tmp/pkg' -name '*.zip' | while read pkg; do install2.r --error $pkg; done \
@@ -423,16 +431,20 @@ RUN apt-get update \
 && echo "$CARTE_USER:$CARTE_PASSWORD" | chpasswd \
 && adduser $CARTE_USER staff \
 ## Set up S6-overlay init system
-  && wget --no-verbose -S -P /tmp/ https://github.com/just-containers/s6-overlay/releases/download/${S6_VERSION}/s6-overlay-amd64-installer \
-  && chmod +x /tmp/s6-overlay-amd64-installer \
-  && /tmp/s6-overlay-amd64-installer / \
+  && S6_ARCH=$([ "$DEB_ARCH" = arm64 ] && echo aarch64 || echo amd64) \
+  && wget --no-verbose -S -O /tmp/s6-overlay-installer https://github.com/just-containers/s6-overlay/releases/download/${S6_VERSION}/s6-overlay-${S6_ARCH}-installer \
+  && chmod +x /tmp/s6-overlay-installer \
+  && /tmp/s6-overlay-installer / \
 ## Install z.sh directory navigation utility
   && wget --no-verbose -S https://raw.githubusercontent.com/rupa/z/master/z.sh \
           -O /etc/profile.d/z.sh \
 ## Install spark
 #&& Rscript -e "library(sparklyr); spark_install('${SPARK_VERSION}');" \
 ## Install binary R arrow package (https://arrow.apache.org/docs/r/articles/install.html)
-&& Rscript '/tmp/pkg/install_arrow.R' \
+## The Posit focal binary is amd64 only, use the r2u build on arm64
+&& if [ "$DEB_ARCH" = amd64 ]; then \
+     Rscript '/tmp/pkg/install_arrow.R'; \
+   else apt-get install -y --no-install-recommends r-cran-arrow; fi \
 ## Clean up source install
   && cd / \
   && chmod +x /entrypoint.sh \

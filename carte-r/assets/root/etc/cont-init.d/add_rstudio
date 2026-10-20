@@ -9,12 +9,19 @@ ADD_RSTUDIO=${ADD_RSTUDIO:=none}
 # Rstudio Version specify with -e RSTUDIO_VERSION=<ver>
 : RSTUDIO_VERSION=${RSTUDIO_VERSION:?RSTUDIO_VERSION not set}
 
-if [[ $RSTUDIO_VERSION == 'latest' ]]; then
+ARCH=$(dpkg --print-architecture)
+
+if [[ $ARCH == 'arm64' ]]; then
+ # Posit publishes no stable arm64 RStudio Server, only daily builds, so a
+ # pinned RSTUDIO_VERSION cannot be honoured; install the latest daily.
+ echo "arm64: ignoring RSTUDIO_VERSION=${RSTUDIO_VERSION}, using the latest RStudio daily build"
+ RSTUDIO_URL=$(rstudio_latest_url.sh "${RSTUDIO_OS}" "${ARCH}")
+elif [[ $RSTUDIO_VERSION == 'latest' ]]; then
  # Posit removed the "latest" symlink; resolve the newest stable .deb URL
  # from Posit's published downloads manifest.
  RSTUDIO_URL=$(rstudio_latest_url.sh "${RSTUDIO_OS}")
 else
- RSTUDIO_URL="https://download2.rstudio.org/server/${RSTUDIO_OS}/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb"
+ RSTUDIO_URL="https://download2.rstudio.org/server/${RSTUDIO_OS}/${ARCH}/rstudio-server-${RSTUDIO_VERSION}-${ARCH}.deb"
 fi
 
 # Verify if the URL exists
