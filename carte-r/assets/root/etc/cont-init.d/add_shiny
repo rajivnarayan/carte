@@ -4,6 +4,11 @@ ADD_SHINY=${ADD_SHINY:=none}
 
 ## A script to add shiny to an rstudio-based rocker image.  
 
+if [[ "$ADD_SHINY" == "true" && $(dpkg --print-architecture) != "amd64" ]]; then
+	echo "Shiny server is only published for amd64, not adding it on $(dpkg --print-architecture)"
+	ADD_SHINY=unsupported
+fi
+
 if [[ "$ADD_SHINY" == "true" ]]; then
 	echo "Adding shiny server to container..."	
 	apt-get update

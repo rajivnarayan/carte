@@ -42,7 +42,6 @@ services:
   rstudio_static: &rstudio_static
     <<: *base
     image: ${CARTE_IMAGE_RSTUDIO:?err}
-    platform: linux/amd64
     environment:
         <<: *base_env
         # RStudio is pre-installed in the image; don't reinstall at startup

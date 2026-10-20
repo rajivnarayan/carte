@@ -1,4 +1,6 @@
-FROM askrajiv/carte-r:latest
+# Base image, CI pins this to the carte-r build of the same commit
+ARG CARTE_IMAGE=askrajiv/carte-r:latest
+FROM ${CARTE_IMAGE}
 
 ENV ADD_RSTUDIO=none
 
