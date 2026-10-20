@@ -81,7 +81,7 @@ Open http://localhost:8787 and log in with username `carte` and the password fro
 ```bash
 docker compose up rstudio_static
 # or, to pull the latest image first:
-./bin/static_rstudio_helper.sh
+./run.sh rstudio_static
 ```
 
 The image is set by `CARTE_IMAGE_RSTUDIO` in `.env`.
@@ -95,6 +95,14 @@ docker compose up full
 - RStudio: http://localhost:8787
 - OpenCPU: http://localhost:8080/ocpu
 - Shiny: http://localhost:3838
+
+**Using the run script:**
+
+`run.sh` pulls the latest image and starts any service in `docker-compose.yml` (default: `rstudio_static`):
+
+```bash
+./run.sh [base|rstudio|rstudio_static|opencpu|shiny|full]
+```
 
 > **Note:** Host ports are configured in `.env` via `RSTUDIO_HOST_PORT`, `SHINY_HOST_PORT`, and `OPENCPU_HTTP_HOST_PORT`. If a port is already in use on your host, change the corresponding variable before starting the container.
 
