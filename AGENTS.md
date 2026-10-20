@@ -19,12 +19,12 @@ carte/
 ├── carte-r/
 │   ├── Dockerfile              # Main image build
 │   ├── Dockerfile.rstudio      # Static RStudio variant (FROM carte-r)
-│   ├── docker-compose.yml      # Compose services: base, rstudio, opencpu, shiny, full
+│   ├── docker-compose.yml      # Compose services: base, rstudio, rstudio_static, opencpu, shiny, full
 │   ├── dotenv                  # Template for .env — copy to .env before use
 │   ├── build.sh                # Build the main carte-r image
 │   ├── build_rstudio.sh        # Build the static RStudio image
-│   ├── assets/                 # Files copied into the image (entrypoint, s6 services, etc.)
-│   └── bin/                    # Helper scripts
+│   ├── run.sh                  # Pull and run a compose service (default: rstudio_static)
+│   └── assets/                 # Files copied into the image (entrypoint, s6 services, etc.)
 ├── carte-py/
 │   ├── Dockerfile
 │   └── environment.yml         # Conda environment spec
@@ -62,7 +62,7 @@ Do not reference `quay.io` or any other registry for these images.
 ## Key Files to Know
 
 - `carte-r/dotenv` — template for all runtime configuration; copy to `.env` before running compose
-- `carte-r/docker-compose.yml` — defines `base`, `rstudio`, `opencpu`, `shiny`, and `full` services
+- `carte-r/docker-compose.yml` — defines `base`, `rstudio`, `rstudio_static`, `opencpu`, `shiny`, and `full` services
 - `carte-r/assets/root/entrypoint.sh` — container entrypoint, handles user setup and service activation
 - `carte-r/assets/root/etc/cont-init.d/` — s6-overlay init scripts that install optional services at startup
 
